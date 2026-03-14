@@ -1,13 +1,10 @@
 // ==========================================
-// 1. STATE & NETWORKING (PEER JS)
+// 1. STATE & NETWORKING
 // ==========================================
 let peer, connection, myRole = '', myName = 'Player 1', friendName = 'Player 2';
 let activeGame = 'ludo', isChatOpen = false, isMenuOpen = false, isRolling = false;
 let activeIntervals = {};
-
-// Enterprise Penalty Trackers
-let sConsec1s = 0; 
-let lConsec6s = 0;
+let sConsec1s = 0, lConsec6s = 0;
 
 function toggleMenu() { 
     isMenuOpen = !isMenuOpen; 
@@ -28,17 +25,10 @@ async function initPeer() {
     if(document.getElementById('playerName').value.trim()) myName = document.getElementById('playerName').value.trim();
     const rid = Math.random().toString(36).substr(2, 4).toUpperCase();
     return new Promise((res) => {
-        peer = new Peer(rid, { 
-            config: { 
-                'iceServers': [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }
-                ] 
-            }
-        });
+        peer = new Peer(rid, { config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }] } });
         peer.on('open', id => res(id));
-        peer.on('disconnected', () => { peer.reconnect(); });
-        peer.on('error', err => { document.getElementById('myIdDisplay').innerText = "Failed."; });
+        peer.on('disconnected', () => peer.reconnect());
+        peer.on('error', () => { document.getElementById('myIdDisplay').innerText = "Failed."; });
     });
 }
 
@@ -56,7 +46,6 @@ async function hostGame() {
                 handleDisconnectUI(false);
                 if (document.getElementById('setupPanel').style.display === 'none') {
                     conn.send({ type: 'reconnectSync', ludoState, sllPlayers, sllTurn, portals, tttBoard, isMyTurnTTT: !isMyTurnTTT, hostName: myName, sConsec1s, lConsec6s });
-                    appendChat('System', `Guest Reconnected!`);
                 } else { myRole = 'Host'; startGame(); }
             });
         }); 
@@ -77,17 +66,15 @@ function startGame() {
     document.getElementById('controlDock').style.display = 'flex';
     
     setDiceFace('diceHost', 6); setDiceFace('diceGuest', 6);
-    updateNameUI(); connection.send({ type: 'init', name: myName }); appendChat('System', `You joined as ${myName}.`);
+    updateNameUI(); connection.send({ type: 'init', name: myName });
     if(myRole === 'Host') { portals = generateRandomPortals(); connection.send({ type: 'initSnakesMap', portals }); initSnakes(); }
     initTTT(); initLudo(); switchGame('ludo');
-    
     window.addEventListener('resize', () => { if(activeGame === 'snakes') { drawPortalsSVG(); setupTokens(); } });
 }
 
 function updateNameUI() {
     const h = myRole === 'Host' ? myName+" (You)" : friendName; const g = myRole === 'Guest' ? myName+" (You)" : friendName;
-    let iconH = activeGame==='ttt' ? '❌' : '🔴'; let iconG = activeGame==='ttt' ? '⭕' : (activeGame==='ludo'?'🟡':'🔵');
-    document.getElementById('p1Name').innerText = `${h} ${iconH}`; document.getElementById('p2Name').innerText = `${g} ${iconG}`;
+    document.getElementById('p1Name').innerText = `${h} 🔴`; document.getElementById('p2Name').innerText = `${g} 🟡`;
 }
 
 function setupListeners() {
@@ -95,11 +82,11 @@ function setupListeners() {
     connection.on('error', () => handleDisconnectUI(true));
 
     connection.on('data', (data) => {
-        if (data.type === 'init') { friendName = data.name; updateNameUI(); appendChat('System', `${friendName} connected!`); updateAllUI(); }
+        if (data.type === 'init') { friendName = data.name; updateNameUI(); updateAllUI(); }
         if (data.type === 'reconnectSync') {
             friendName = data.hostName; ludoState = data.ludoState; sllPlayers = data.sllPlayers; sllTurn = data.sllTurn; portals = data.portals; tttBoard = data.tttBoard; isMyTurnTTT = data.isMyTurnTTT; sConsec1s = data.sConsec1s; lConsec6s = data.lConsec6s;
             document.getElementById('setupPanel').style.display = 'none'; document.getElementById('navMenuBtn').style.display = 'block'; document.getElementById('chatToggleBtn').style.display = 'flex'; document.getElementById('controlDock').style.display = 'flex';
-            updateNameUI(); initSnakes(); updateAllUI(); appendChat('System', `Reconnected!`);
+            updateNameUI(); initSnakes(); updateAllUI();
         }
         if (data.type === 'chat') appendChat(friendName, data.msg, 'msg-them');
         
@@ -159,7 +146,7 @@ function requestUniversalRoll(clickedRole) {
 
 function hostGenerateRoll(gameType, role) {
     const finalRoll = Math.floor(Math.random()*6)+1;
-    const payload = { type: 'diceRollAnim', game: gameType, role: role, result: finalRoll, ts: Date.now() };
+    const payload = { type: 'diceRollAnim', game: gameType, role: role, result: finalRoll };
     playDiceAnimation(payload); 
     connection.send(payload); 
 }
@@ -185,7 +172,7 @@ function playDiceAnimation(data) {
 }
 
 // ==========================================
-// 3. SNAKES & LADDERS (ENTERPRISE LOGIC)
+// 3. SNAKES & LADDERS ENHANCED GRAPHICS
 // ==========================================
 let sllPlayers = { 'Host': { pos: 0, class: 'Host' }, 'Guest': { pos: 0, class: 'Guest' } }, sllTurn = 'Host', portals = {}; 
 function generateRandomPortals() { let p={}; let u = new Set([1, 100]); for(let i=0;i<6;i++){ let s=getRandFree(u,2,80); let e=getRandFree(u,s+10,99); p[s]=e; u.add(s); u.add(e); } for(let i=0;i<6;i++){ let s=getRandFree(u,20,99); let e=getRandFree(u,2,s-10); p[s]=e; u.add(s); u.add(e); } return p; }
@@ -194,8 +181,9 @@ function getRandFree(u, min, max) { let v; do{ v=Math.floor(Math.random()*(max-m
 function initSnakes() { 
     const b = document.getElementById('snakesBoard'); b.querySelectorAll('.snakes-cell, .token').forEach(e => e.remove());
     let l2r = true; 
+    const colors = ['#fce4ec', '#e3f2fd', '#fff3e0', '#e8f5e9'];
     for (let r=10; r>=1; r--) { let cells=[]; for(let c=1; c<=10; c++) cells.push((r-1)*10+c); if(!l2r) cells.reverse(); 
-        cells.forEach((num, idx) => { const cell=document.createElement('div'); cell.className='snakes-cell'; cell.id=`scell-${num}`; cell.innerText=num; cell.style.background = (r+idx)%2===0 ? '#ffca3a':'#ffea00'; b.appendChild(cell); }); l2r=!l2r; } 
+        cells.forEach((num, idx) => { const cell=document.createElement('div'); cell.className='snakes-cell'; cell.id=`scell-${num}`; cell.innerText=num; cell.style.background = colors[(r+idx)%4]; b.appendChild(cell); }); l2r=!l2r; } 
     if(activeGame === 'snakes') requestAnimationFrame(()=>setTimeout(() => { drawPortalsSVG(); setupTokens(); updateDiceTurnUI(); }, 50));
 }
 
@@ -207,10 +195,14 @@ function drawPortalsSVG() {
             let x1=c1.offsetLeft+c1.offsetWidth/2, y1=c1.offsetTop+c1.offsetHeight/2, x2=c2.offsetLeft+c2.offsetWidth/2, y2=c2.offsetTop+c2.offsetHeight/2;
             let isLadder = e > s; let dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy), nx=-dy/len, ny=dx/len;
             if(isLadder) {
-                let r=6, r1=`<line x1="${x1+nx*r}" y1="${y1+ny*r}" x2="${x2+nx*r}" y2="${y2+ny*r}" stroke="#4285f4" stroke-width="4" stroke-linecap="round" />`, r2=`<line x1="${x1-nx*r}" y1="${y1-ny*r}" x2="${x2-nx*r}" y2="${y2-ny*r}" stroke="#4285f4" stroke-width="4" stroke-linecap="round" />`; svg.innerHTML+=r1+r2;
+                // Ladder Graphic: Wooden rails & rungs
+                let r=8, r1=`<line x1="${x1+nx*r}" y1="${y1+ny*r}" x2="${x2+nx*r}" y2="${y2+ny*r}" stroke="#8B4513" stroke-width="5" stroke-linecap="round" />`, r2=`<line x1="${x1-nx*r}" y1="${y1-ny*r}" x2="${x2-nx*r}" y2="${y2-ny*r}" stroke="#8B4513" stroke-width="5" stroke-linecap="round" />`; svg.innerHTML+=r1+r2;
+                let st=Math.floor(len/16); for(let i=1;i<=st;i++){ let px=x1+dx*(i/(st+1)), py=y1+dy*(i/(st+1)); svg.innerHTML+=`<line x1="${px+nx*r}" y1="${py+ny*r}" x2="${px-nx*r}" y2="${py-ny*r}" stroke="#A0522D" stroke-width="4" />`; }
             } else {
-                let c1x=x1+dx*0.3+nx*30, c1y=y1+dy*0.3+ny*30, c2x=x1+dx*0.7-nx*30, c2y=y1+dy*0.7-ny*30;
-                svg.innerHTML+=`<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#00A551" stroke-width="8" stroke-linecap="round" />`;
+                // Snake Graphic: Curved body & red head
+                let c1x=x1+dx*0.3+nx*40, c1y=y1+dy*0.3+ny*40, c2x=x1+dx*0.7-nx*40, c2y=y1+dy*0.7-ny*40;
+                svg.innerHTML+=`<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#2e7d32" stroke-width="12" stroke-linecap="round" />`;
+                svg.innerHTML+=`<circle cx="${x1}" cy="${y1}" r="8" fill="#d32f2f" />`; // Head
             }
         }
     });
@@ -220,33 +212,23 @@ function setupTokens() { ['Host', 'Guest'].forEach(k => { let t = document.getEl
 
 function moveTokenDOM(k, p) { 
     let t = document.getElementById(`token-${k}`);
-    if (p === 0) { t.style.display = 'none'; return; } // Hide if off board
+    if (p === 0) { t.style.display = 'none'; return; } 
     t.style.display = 'block';
     let c = document.getElementById(`scell-${p}`); 
-    if(t&&c&&c.offsetWidth>0){ let off = k==='Host'?-4:4; t.style.transform=`translate(${c.offsetLeft+c.offsetWidth/2-10+off}px, ${c.offsetTop+c.offsetHeight/2-10+off}px)`; } 
+    if(t&&c&&c.offsetWidth>0){ let off = k==='Host'?-5:5; t.style.transform=`translate(${c.offsetLeft+c.offsetWidth/2-12+off}px, ${c.offsetTop+c.offsetHeight/2-12+off}px)`; } 
 }
 
 function processSnakesRoll(roll, role) { 
-    let p = sllPlayers[role];
-    let cur = p.pos;
-    let nextTurn = (role === 'Host') ? 'Guest' : 'Host';
-    let bonus = false;
-
-    // 1. Triple-1 Penalty Check
+    let p = sllPlayers[role], cur = p.pos, nextTurn = (role === 'Host') ? 'Guest' : 'Host', bonus = false;
     if (roll === 1) {
         sConsec1s++;
-        if (sConsec1s === 3) {
-            sConsec1s = 0;
-            let data = { type: 'snakesSync', players:sllPlayers, nextTurn:nextTurn, msg:"Triple 1s! Turn Skipped.", animData:{player:role, intPos:cur, finPos:cur} };
-            connection.send(data); handleSnakesSync(data); return;
-        }
+        if (sConsec1s === 3) { sConsec1s = 0; let data = { type: 'snakesSync', players:sllPlayers, nextTurn:nextTurn, msg:"Triple 1s! Turn Skipped.", animData:{player:role, intPos:cur, finPos:cur} }; connection.send(data); handleSnakesSync(data); return; }
         bonus = true; 
     } else { sConsec1s = 0; }
 
-    // 2. Exact 100 & Entry Logic
     let target = cur;
-    if (cur === 0) { if (roll === 1) target = 1; } // 1 to enter
-    else if (cur + roll > 100) { target = cur; } // Exact roll required
+    if (cur === 0) { if (roll === 1) target = 1; }
+    else if (cur + roll > 100) { target = cur; } 
     else { target = cur + roll; }
 
     let fin = portals[target] ? portals[target] : target;
@@ -276,7 +258,7 @@ function updateDiceTurnUI() {
 }
 
 // ==========================================
-// 4. LUDO PRO (ENTERPRISE LOGIC)
+// 4. LUDO PRO - TOKEN LOGIC FIXED
 // ==========================================
 let ludoCanvas = document.getElementById('ludoCanvas'); let lctx = ludoCanvas.getContext('2d'); const CS = 40; const logicalSize = 600;
 let isLudoRendering = false; 
@@ -299,9 +281,14 @@ function initLudo() {
 
 function processLudoRoll(roll, role) {
     ludoState.roll=roll; ludoState.hasRolled=true; let valid=false;
-    ludoState.tokens[role].forEach(t => { if((t.state==='base'&&roll===6) || (t.state==='path'&&t.pos+roll<=56) || (t.state==='home'&&t.pos+roll<=5)) valid=true; });
     
-    // Triple 6 Check handled here before turn ends
+    // FIX 1: Correctly validate if ANY token can move (either out of base on a 6, or along the path)
+    ludoState.tokens[role].forEach(t => { 
+        if(t.state==='base' && roll===6) valid=true; 
+        if(t.state==='path' && t.pos+roll<=56) valid=true; 
+        if(t.state==='home' && t.pos+roll<=5) valid=true; 
+    });
+    
     if(roll === 6) lConsec6s++; else lConsec6s = 0;
     if(lConsec6s === 3) {
         lConsec6s = 0; ludoState.hasRolled = false; ludoState.turn = role === 'Host' ? 'Guest' : 'Host';
@@ -309,8 +296,10 @@ function processLudoRoll(roll, role) {
         connection.send({type: 'ludoSync', state: ludoState}); updateLudoUI(); return;
     }
 
-    if(!valid){ if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}, no moves.`; setTimeout(()=>endLudoTurn(false), 1500); } 
-    else { 
+    if(!valid){ 
+        if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}, no moves.`; 
+        setTimeout(()=>endLudoTurn(false), 1200); 
+    } else { 
         if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}! Tap a token.`; 
         connection.send({type: 'ludoSync', state: ludoState}); 
     }
@@ -320,13 +309,28 @@ function handleLudoTap(cx, cy) {
     if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
     for (let t of ludoState.tokens[myRole]) {
         if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 40) { 
+            // FIX 2: Validate the specific tapped token to prevent freezing on invalid taps
+            if(t.state==='base' && ludoState.roll !== 6) continue;
+            if(t.state==='path' && t.pos + ludoState.roll > 56) continue;
+            if(t.state==='home' && t.pos + ludoState.roll > 5) continue;
+            if(t.state==='done') continue;
+
             if(myRole==='Guest') connection.send({type:'requestLudoMove', tokenId:t.id}); 
             else attemptLudoMove(t, ludoState.roll); 
             return; 
         }
     }
 }
-ludoCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); if(e.touches.length>0){ const rect=ludoCanvas.getBoundingClientRect(); handleLudoTap((e.touches[0].clientX-rect.left)*(logicalSize/rect.width), (e.touches[0].clientY-rect.top)*(logicalSize/rect.height)); } }, {passive: false});
+
+ludoCanvas.addEventListener("touchstart", (e) => { 
+    e.preventDefault(); 
+    if(e.touches.length>0){ 
+        const rect=ludoCanvas.getBoundingClientRect(); 
+        const scaleX = logicalSize / rect.width;
+        const scaleY = logicalSize / rect.height;
+        handleLudoTap((e.touches[0].clientX-rect.left)*scaleX, (e.touches[0].clientY-rect.top)*scaleY); 
+    } 
+}, {passive: false});
 
 function attemptLudoMove(t, roll) {
     if(t.state==='base') { if(roll!==6) return false; t.state='path'; t.pos=0; t.visualPos=0; } 
@@ -350,7 +354,6 @@ function endLudoTurn(cap = false) {
     let win=true; ludoState.tokens[myRole].forEach(t=>{if(t.state!=='done') win=false;});
     if(win) { ludoState.turn='none'; if(activeGame==='ludo') document.getElementById('gameStatus').innerText="🏆 YOU WIN! 🏆"; connection.send({type:'ludoSync',state:ludoState,msg:"win"}); return; }
     
-    // Enterprise Extra Turn Logic (1, 6, or Capture)
     let bonus = (roll === 6 || roll === 1 || cap);
     ludoState.hasRolled = false; 
     
@@ -373,7 +376,7 @@ function updateLudoUI() {
 }
 
 function drawPawn(ctx, x, y, color, z = 0) {
-    y = y - z; let dc=color==='Host'?'#990000':'#b38600', mc=color==='Host'?'#E3000F':'#FFD100', lc=color==='Host'?'#ff6666':'#ffea75';
+    y = y - z; let dc=color==='Host'?'#cc0000':'#e6b800', mc=color==='Host'?'#ff4d4d':'#ffcc00', lc=color==='Host'?'#ff9999':'#ffe680';
     ctx.beginPath(); ctx.ellipse(x, y+z+4, 11, 5, 0, 0, Math.PI*2); ctx.fillStyle=`rgba(0,0,0,${z>0?0.15:0.35})`; ctx.fill();
     ctx.beginPath(); ctx.ellipse(x, y+3, 11, 5, 0, 0, Math.PI*2); ctx.fillStyle=dc; ctx.fill();
     ctx.beginPath(); ctx.ellipse(x, y+1, 11, 5, 0, 0, Math.PI*2); ctx.fillStyle=mc; ctx.fill();
@@ -383,7 +386,7 @@ function drawPawn(ctx, x, y, color, z = 0) {
 }
 
 function renderLudoAnimation() {
-    if(document.hidden || activeGame !== 'ludo') { requestAnimationFrame(renderLudoAnimation); return; } // Saves Battery
+    if(document.hidden || activeGame !== 'ludo') { requestAnimationFrame(renderLudoAnimation); return; } 
     Object.values(ludoState.tokens).flat().forEach(t => {
         if (t.visualPos !== t.pos && !t.isFlyingBack) { let diff=t.pos-t.visualPos; t.visualPos += Math.sign(diff)*Math.min(Math.abs(diff), 0.15); if(Math.abs(t.pos-t.visualPos)<0.01) t.visualPos=t.pos; }
         if(t.state==='base'){ t.targetX=t.bx; t.targetY=t.by; } 
@@ -402,7 +405,7 @@ function renderLudoAnimation() {
     });
 
     lctx.clearRect(0,0,600,600);
-    const cols = ["#00A551", "#FFD100", "#E3000F", "#0072CE"];
+    const cols = ["#00A551", "#FFD100", "#ff4d4d", "#0072CE"];
     lctx.fillStyle=cols[0]; lctx.fillRect(0,0,6*CS,6*CS); lctx.fillStyle=cols[1]; lctx.fillRect(9*CS,0,6*CS,6*CS); lctx.fillStyle=cols[2]; lctx.fillRect(0,9*CS,6*CS,6*CS); lctx.fillStyle=cols[3]; lctx.fillRect(9*CS,9*CS,6*CS,6*CS); 
     
     lctx.strokeStyle="#333"; lctx.lineWidth=1.5;
@@ -430,7 +433,7 @@ function renderLudoAnimation() {
 }
 
 // ==========================================
-// 5. TIC-TAC-TOE (Basic Implementation)
+// 5. TIC-TAC-TOE NEON
 // ==========================================
 let tttBoard = ['','','','','','','','',''], isMyTurnTTT = false;
 const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
