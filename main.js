@@ -119,17 +119,17 @@ function switchGame(gid) {
     if(gid === 'snakes') requestAnimationFrame(() => setTimeout(() => { drawPortalsSVG(); setupTokens(); }, 50)); 
 }
 
-function updateAllUI() { 
-    if(activeGame === 'ttt') document.getElementById('gameStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; 
-    if(activeGame === 'ludo') updateLudoUI(); 
-    if(activeGame === 'snakes') updateDiceTurnUI(); 
-}
-
 function resetCurrentGame() {
     if(myRole !== 'Host') return alert("Only the Host can reset the game.");
     if(activeGame === 'ttt') { tttBoard = ['','','','','','','','','']; isMyTurnTTT = true; connection.send({type: 'tttSync', board: tttBoard, turn: 'Host'}); updateTTTLocal(); }
     else if(activeGame === 'snakes') { portals = generateRandomPortals(); sllPlayers = {'Host':{pos:0,class:'Host'},'Guest':{pos:0,class:'Guest'}}; sllTurn = 'Host'; sConsec1s = 0; connection.send({type: 'initSnakesMap', portals}); connection.send({type: 'snakesSync', players: sllPlayers, nextTurn: sllTurn, msg: "New Game!"}); initSnakes(); }
     else if(activeGame === 'ludo') { ludoState = getInitialLudoState(); lConsec6s = 0; connection.send({type: 'ludoSync', state: ludoState}); updateLudoUI(); }
+}
+
+function updateAllUI() { 
+    if(activeGame === 'ttt') document.getElementById('gameStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; 
+    if(activeGame === 'ludo') updateLudoUI(); 
+    if(activeGame === 'snakes') updateDiceTurnUI(); 
 }
 
 // ==========================================
@@ -258,18 +258,41 @@ function updateDiceTurnUI() {
 }
 
 // ==========================================
-// 4. LUDO PRO - FULLY REBUILT ENGINE
+// 4. LUDO PRO - ENTERPRISE PHYSICS ENGINE
 // ==========================================
 let ludoCanvas = document.getElementById('ludoCanvas'); let lctx = ludoCanvas.getContext('2d'); const CS = 40; const logicalSize = 600;
 let isLudoRendering = false; 
 
-// Continuous Index 0-56 simplifies all math
 const ludoPath = [[6,13],[6,12],[6,11],[6,10],[6,9],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8],[0,7],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,5],[6,4],[6,3],[6,2],[6,1],[6,0],[7,0],[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[14,7],[14,8],[13,8],[12,8],[11,8],[10,8],[9,8],[8,9],[8,10],[8,11],[8,12],[8,13],[8,14],[7,14],[6,14]];
-const safeZones = [0, 8, 13, 21, 26, 34, 39, 47];
+const safeZones = [0, 8, 13, 21, 26, 34, 39, 47]; // Global indices of star blocks
 const redHomePath = [[7,13],[7,12],[7,11],[7,10],[7,9]]; const yellowHomePath = [[7,1],[7,2],[7,3],[7,4],[7,5]];
 
 let ludoState = getInitialLudoState();
 function getInitialLudoState() { return { turn: 'Host', roll: 0, hasRolled: false, tokens: { 'Host': [ { id: 'H1', state: 'base', pos: 0, player: 'Host', bx: 2.2*CS, by: 11.2*CS, x: 2.2*CS, y: 11.2*CS, targetX: 2.2*CS, targetY: 11.2*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H2', state: 'base', pos: 0, player: 'Host', bx: 3.8*CS, by: 11.2*CS, x: 3.8*CS, y: 11.2*CS, targetX: 3.8*CS, targetY: 11.2*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H3', state: 'base', pos: 0, player: 'Host', bx: 2.2*CS, by: 12.8*CS, x: 2.2*CS, y: 12.8*CS, targetX: 2.2*CS, targetY: 12.8*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H4', state: 'base', pos: 0, player: 'Host', bx: 3.8*CS, by: 12.8*CS, x: 3.8*CS, y: 12.8*CS, targetX: 3.8*CS, targetY: 12.8*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ], 'Guest': [ { id: 'G1', state: 'base', pos: 0, player: 'Guest', bx: 11.2*CS, by: 2.2*CS, x: 11.2*CS, y: 2.2*CS, targetX: 11.2*CS, targetY: 2.2*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G2', state: 'base', pos: 0, player: 'Guest', bx: 12.8*CS, by: 2.2*CS, x: 12.8*CS, y: 2.2*CS, targetX: 12.8*CS, targetY: 2.2*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G3', state: 'base', pos: 0, player: 'Guest', bx: 11.2*CS, by: 3.8*CS, x: 11.2*CS, y: 3.8*CS, targetX: 11.2*CS, targetY: 3.8*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G4', state: 'base', pos: 0, player: 'Guest', bx: 12.8*CS, by: 3.8*CS, x: 12.8*CS, y: 3.8*CS, targetX: 12.8*CS, targetY: 3.8*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ] } }; }
+
+// Ludo Physics Helpers
+function getGlobalPos(role, pos) { return role === 'Host' ? pos : (pos + 26) % 52; }
+function opponentTokensAt(gPos, oppRole) { return ludoState.tokens[oppRole].filter(t => (t.state === 'path' || t.state === 'home') && t.pos <= 50 && getGlobalPos(oppRole, t.pos) === gPos).length; }
+function isPathBlocked(role, startPos, targetPos) {
+    let opp = role === 'Host' ? 'Guest' : 'Host';
+    let pathLimit = Math.min(targetPos, 50); // Blocks only exist on the main path
+    for (let i = startPos + 1; i <= pathLimit; i++) {
+        if (opponentTokensAt(getGlobalPos(role, i), opp) >= 2) return true; // Jota detected
+    }
+    return false;
+}
+
+function getValidTokens(role, roll) {
+    let valid = [];
+    ludoState.tokens[role].forEach(t => {
+        if (t.state === 'base' && roll === 6) valid.push(t);
+        else if (t.state === 'path' || t.state === 'home') {
+            let target = t.pos + roll;
+            if (target <= 56 && !isPathBlocked(role, t.pos, target)) valid.push(t);
+        }
+    });
+    return valid;
+}
 
 function initLudo() { 
     if (!ludoCanvas.hasAttribute('data-scaled')) {
@@ -282,32 +305,25 @@ function initLudo() {
 }
 
 function processLudoRoll(roll, role) {
-    ludoState.roll=roll; ludoState.hasRolled=true; 
+    ludoState.roll = roll; 
+    ludoState.hasRolled = true; 
     
-    if(roll === 6) lConsec6s++; else lConsec6s = 0;
-    if(lConsec6s === 3) {
+    // Triple 6 Foul Logic
+    if (roll === 6) lConsec6s++; else lConsec6s = 0;
+    if (lConsec6s === 3) {
         lConsec6s = 0; ludoState.hasRolled = false; ludoState.turn = role === 'Host' ? 'Guest' : 'Host';
-        appendChat('System', `🚫 Triple 6s! ${role}'s turn skipped.`);
+        appendChat('System', `🚫 FOUL! 3 Sixes in a row. ${role} loses turn.`);
         connection.send({type: 'ludoSync', state: ludoState}); updateLudoUI(); return;
     }
 
-    let validTokens = [];
-    ludoState.tokens[role].forEach(t => { 
-        if(t.state==='base' && roll===6) validTokens.push(t); 
-        else if((t.state==='path' || t.state==='home') && t.pos+roll<=56) validTokens.push(t); 
-    });
+    let validTokens = getValidTokens(role, roll);
 
-    if(validTokens.length === 0){ 
-        if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}, no moves.`; 
+    if (validTokens.length === 0) { 
+        if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}, no valid moves.`; 
         setTimeout(()=>endLudoTurn(false), 1200); 
     } else { 
         if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}! Tap a token.`; 
         connection.send({type: 'ludoSync', state: ludoState}); 
-        
-        // AUTO-MOVE ENGINE: Prevents stuck feeling if only 1 option
-        if (validTokens.length === 1 && myRole === 'Host') {
-            setTimeout(() => { if (ludoState.hasRolled && ludoState.turn === role) attemptLudoMove(validTokens[0], roll); }, 400);
-        }
     }
 }
 
@@ -321,12 +337,12 @@ function attachLudoEvents() {
         let cx = (e.type === 'touchstart' ? e.touches[0].clientX : e.clientX - rect.left) * scaleX;
         let cy = (e.type === 'touchstart' ? e.touches[0].clientY : e.clientY - rect.top) * scaleY;
 
-        for (let t of ludoState.tokens[myRole]) {
-            if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 45) { // 45px Hitbox
-                if(t.state==='base' && ludoState.roll !== 6) continue;
-                if((t.state==='path' || t.state==='home') && t.pos + ludoState.roll > 56) continue;
-                if(t.state==='done') continue;
+        let validTokens = getValidTokens(myRole, ludoState.roll);
 
+        for (let t of ludoState.tokens[myRole]) {
+            if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 45) {
+                // Must be a valid move to proceed (User Choice Logic)
+                if (!validTokens.find(vt => vt.id === t.id)) continue;
                 if(myRole==='Guest') connection.send({type:'requestLudoMove', tokenId:t.id}); 
                 else attemptLudoMove(t, ludoState.roll); 
                 return; 
@@ -338,29 +354,38 @@ function attachLudoEvents() {
 }
 
 function attemptLudoMove(t, roll) {
-    if(t.state==='base') { if(roll!==6) return false; t.state='path'; t.pos=0; t.visualPos=0; } 
-    else if(t.state==='path' || t.state==='home') { 
-        if(t.pos+roll>56) return false; 
-        t.pos+=roll; 
-        if(t.pos >= 51 && t.pos < 56) t.state = 'home';
-        if(t.pos === 56){ t.state='done'; appendChat('System', `🌟 Token HOME!`); } 
-    } 
-    else return false;
-    
-    let cap = checkCaptures(t); endLudoTurn(cap); return true;
-}
+    let role = t.player;
+    let opp = role === 'Host' ? 'Guest' : 'Host';
 
-function checkCaptures(myT) {
-    if(myT.state !== 'path' || myT.pos > 50) return false; 
-    let myP = (myT.player==='Host') ? myT.pos : (myT.pos+26)%52; let cap=false;
-    if(!safeZones.includes(myP)) {
-        ludoState.tokens[myRole==='Host'?'Guest':'Host'].forEach(e => {
-            if(e.state==='path' && e.pos <= 50 && ((e.player==='Host'?e.pos:(e.pos+26)%52) === myP)) { 
-                e.state='base'; e.pos=0; e.visualPos=0; e.isFlyingBack=true; e.flyDist=Math.sqrt(Math.pow(e.bx-e.x,2)+Math.pow(e.by-e.y,2)); 
-                appendChat('System', `⚔️ Captured! Extra turn!`); cap=true; 
+    if(t.state === 'base') { 
+        if(roll !== 6) return false; 
+        t.state = 'path'; t.pos = 0; t.visualPos = 0; 
+    } else { 
+        let target = t.pos + roll;
+        if(target > 56 || isPathBlocked(role, t.pos, target)) return false; 
+        t.pos = target; 
+        if(t.pos >= 51 && t.pos < 56) t.state = 'home';
+        if(t.pos === 56){ t.state = 'done'; appendChat('System', `🌟 Token HOME!`); } 
+    } 
+    
+    let cap = false;
+    // Capture Check
+    if (t.state === 'path' && t.pos <= 50) {
+        let gPos = getGlobalPos(role, t.pos);
+        if (!safeZones.includes(gPos)) {
+            let victims = ludoState.tokens[opp].filter(ot => (ot.state === 'path' || ot.state === 'home') && ot.pos <= 50 && getGlobalPos(opp, ot.pos) === gPos);
+            if (victims.length === 1) { // Cannot capture if there is a Jota block
+                let v = victims[0];
+                v.state = 'base'; v.pos = 0; v.visualPos = 0; v.isFlyingBack = true; 
+                v.flyDist = Math.sqrt(Math.pow(v.bx - v.x, 2) + Math.pow(v.by - v.y, 2));
+                cap = true;
+                appendChat('System', `⚔️ Captured! Extra turn!`);
             }
-        });
-    } return cap;
+        }
+    }
+
+    endLudoTurn(cap); 
+    return true;
 }
 
 function endLudoTurn(cap = false) {
@@ -368,7 +393,7 @@ function endLudoTurn(cap = false) {
     let win=true; ludoState.tokens[myRole].forEach(t=>{if(t.state!=='done') win=false;});
     if(win) { ludoState.turn='none'; if(activeGame==='ludo') document.getElementById('gameStatus').innerText="🏆 YOU WIN! 🏆"; connection.send({type:'ludoSync',state:ludoState,msg:"win"}); return; }
     
-    let bonus = (roll === 6 || roll === 1 || cap);
+    let bonus = (roll === 6 || cap);
     ludoState.hasRolled = false; 
     
     if(bonus) { ludoState.turn = myRole; appendChat('System', `🎲 Bonus Roll!`); } 
