@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>P2P Game Hub | Enterprise Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>P2P Game Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
@@ -12,11 +12,11 @@
     <div id="disconnectOverlay">
         <div class="spinner"></div>
         <h2 style="margin: 0;">Connection Lost</h2>
-        <p style="color: #aaa;">Attempting to reconnect to peer...</p>
+        <p style="color: #aaa;">Attempting to reconnect...</p>
     </div>
 
     <div class="top-bar">
-        <h1>🎮 P2P Game Hub</h1>
+        <h1>🎮 Game Hub</h1>
         <button class="menu-btn" id="navMenuBtn" onclick="toggleMenu()" style="display: none;">☰</button>
     </div>
 
@@ -24,7 +24,7 @@
         <button class="btn" onclick="switchGame('ludo'); toggleMenu()">🎲 Ludo Pro</button>
         <button class="btn" onclick="switchGame('snakes'); toggleMenu()">🐍 Snakes & Ladders</button>
         <button class="btn" onclick="switchGame('ttt'); toggleMenu()">❌ Tic-Tac-Toe</button>
-        <button class="btn" style="background: var(--host-color); margin-top: 30px;" onclick="resetCurrentGame(); toggleMenu()">🔄 Reset Current Game</button>
+        <button class="btn" style="background: var(--host-color); margin-top: 30px;" onclick="resetCurrentGame(); toggleMenu()">🔄 Reset Game</button>
         <button class="btn" style="background: #5f6368;" onclick="location.reload()">🔌 Disconnect</button>
     </div>
 
@@ -38,14 +38,16 @@
         <button class="btn" onclick="joinGame()" style="width: 100%;">Join Game</button>
     </div>
 
-    <div id="ttt" class="game-section">
-        <div class="ttt-board" id="tttBoard"></div>
-    </div>
-    <div id="snakes" class="game-section">
-        <div class="snakes-board" id="snakesBoard"><svg id="snakesSvg"></svg></div>
-    </div>
-    <div id="ludo" class="game-section">
-        <canvas id="ludoCanvas"></canvas>
+    <div id="gameContainer">
+        <div id="ttt" class="game-section">
+            <div class="ttt-board" id="tttBoard"></div>
+        </div>
+        <div id="snakes" class="game-section">
+            <div class="snakes-board" id="snakesBoard"><svg id="snakesSvg"></svg></div>
+        </div>
+        <div id="ludo" class="game-section active-game">
+            <canvas id="ludoCanvas"></canvas>
+        </div>
     </div>
 
     <div class="control-panel" id="controlDock" style="display: none;">
