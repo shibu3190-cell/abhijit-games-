@@ -28,21 +28,20 @@ input { padding: 14px; border: 2px solid #5f6368; border-radius: 12px; width: 10
 .active-game { display: flex; animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-/* 1. TIC-TAC-TOE NEON UPGRADE */
+/* TIC-TAC-TOE NEON */
 .ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 400px; aspect-ratio: 1; background: #3c4043; padding: 15px; border-radius: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.6); }
 .ttt-cell { background: #202124; display: flex; justify-content: center; align-items: center; font-size: 18vmin; font-weight: 900; cursor: pointer; border-radius: 12px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.6), 0 2px 5px rgba(255,255,255,0.05); transition: 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .ttt-cell:active { transform: scale(0.95); }
 .ttt-cell.x-mark { color: var(--host-color); text-shadow: 0 0 20px rgba(255, 77, 77, 0.8); }
 .ttt-cell.o-mark { color: var(--guest-color); text-shadow: 0 0 20px rgba(255, 204, 0, 0.8); }
 
-/* 2. SNAKES & LADDERS UPGRADE */
+/* SNAKES & LADDERS */
 .snakes-board { display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); width: 100%; max-width: 450px; aspect-ratio: 1; border: 8px solid #5f6368; position: relative; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); background: #fff; touch-action: none; }
 .snakes-cell { display: flex; justify-content: center; align-items: center; font-size: 3vmin; font-weight: 900; color: #202124; position: relative; border: 1px solid rgba(0,0,0,0.1); }
 #snakesSvg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 
-/* 3. LUDO BOARD */
+/* LUDO BOARD */
 canvas { background: #fff; border-radius: 12px; width: 100%; max-width: 450px; aspect-ratio: 1; box-shadow: 0 10px 25px rgba(0,0,0,0.5); touch-action: none; object-fit: contain; }
-
 .token { width: 5vmin; height: 5vmin; max-width: 25px; max-height: 25px; border-radius: 50%; position: absolute; top: 0; left: 0; border: 2px solid white; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.6); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .token.Host { background: radial-gradient(circle at 30% 30%, #ff8a80, #E3000F); }
 .token.Guest { background: radial-gradient(circle at 30% 30%, #ffee58, #F2A900); }
