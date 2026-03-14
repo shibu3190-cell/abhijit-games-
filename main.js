@@ -17,8 +17,9 @@ function setDiceFace(id, roll) {
     for(let i=0; i<9; i++) {
         let dot = document.createElement('div'); dot.style.width='100%'; dot.style.height='100%'; dot.style.borderRadius='50%';
         if(p[roll] && p[roll].includes(i)) { 
-            dot.style.background='#111'; 
-            dot.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.8)'; 
+            // Authentic 3D inset dots
+            dot.style.background = 'radial-gradient(circle at 30% 30%, #555, #000)'; 
+            dot.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.8)'; 
         } 
         d.appendChild(dot);
     }
@@ -95,7 +96,7 @@ function setupListeners() {
         }
         if (data.type === 'chat') appendChat(friendName, data.msg, 'msg-them');
         
-        // Host processing
+        // Host processing validation
         if (myRole === 'Host') {
             if (data.type === 'requestRoll') hostGenerateRoll(data.game, 'Guest');
             if (data.type === 'requestLudoMove') { let t = ludoState.tokens['Guest'].find(x => x.id === data.tokenId); if (t) attemptLudoMove(t, ludoState.roll); }
@@ -167,6 +168,7 @@ function playDiceAnimation(data) {
             setDiceFace(`dice${data.role}`, data.result); 
             dice.classList.remove('rolling'); isRolling = false;
             
+            // Host is Authoritative
             if (myRole === 'Host') {
                 if (data.game === 'snakes') processSnakesRoll(data.result, data.role); 
                 if (data.game === 'ludo') processLudoRoll(data.result, data.role);
@@ -176,7 +178,7 @@ function playDiceAnimation(data) {
 }
 
 // ==========================================
-// 3. SNAKES & LADDERS: TOY THEATER STYLE
+// 3. SNAKES & LADDERS: HIGH CONTRAST COLORS
 // ==========================================
 let sllPlayers = { 'Host': { pos: 0, class: 'Host' }, 'Guest': { pos: 0, class: 'Guest' } }, sllTurn = 'Host', portals = {}; 
 function generateRandomPortals() { let p={}; let u = new Set([1, 100]); for(let i=0;i<6;i++){ let s=getRandFree(u,2,80); let e=getRandFree(u,s+10,99); p[s]=e; u.add(s); u.add(e); } for(let i=0;i<6;i++){ let s=getRandFree(u,20,99); let e=getRandFree(u,2,s-10); p[s]=e; u.add(s); u.add(e); } return p; }
@@ -280,7 +282,7 @@ function updateDiceTurnUI() {
 }
 
 // ==========================================
-// 4. LUDO PRO - "KING" LOGIC & RENDERING
+// 4. LUDO PRO - FLAWLESS PHYSICS
 // ==========================================
 let ludoCanvas = document.getElementById('ludoCanvas'); let lctx = ludoCanvas.getContext('2d'); const CS = 40; const logicalSize = 600;
 let isLudoRendering = false; 
@@ -345,8 +347,8 @@ function processLudoRoll(roll, role) {
         if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Choose a token to move!`; 
         connection.send({type: 'ludoSync', state: ludoState}); 
         
-        // AUTO-MOVE: If only 1 possible choice, do it automatically for fluid gameplay
-        if (validTokens.length === 1 && role === myRole) {
+        // AUTO-MOVE ENGINE: Host processes logic for both players if only 1 option exists
+        if (validTokens.length === 1) {
             setTimeout(() => attemptLudoMove(validTokens[0], roll), 400);
         }
     }
@@ -354,13 +356,18 @@ function processLudoRoll(roll, role) {
 
 function attachLudoEvents() {
     const handler = (e) => {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
+        
         const rect = ludoCanvas.getBoundingClientRect();
         const scaleX = logicalSize / rect.width;
         const scaleY = logicalSize / rect.height;
-        let cx = (e.type === 'touchstart' ? e.touches[0].clientX : e.clientX - rect.left) * scaleX;
-        let cy = (e.type === 'touchstart' ? e.touches[0].clientY : e.clientY - rect.top) * scaleY;
+        
+        // BUG FIX: Precise Mobile Hitbox Calculation
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        let cx = (clientX - rect.left) * scaleX;
+        let cy = (clientY - rect.top) * scaleY;
 
         let validTokens = getValidTokens(myRole, ludoState.roll);
 
