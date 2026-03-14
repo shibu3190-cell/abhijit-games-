@@ -2,95 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P2P Game Hub | Ultimate Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #202124; --surface: #292a2d; --primary: #8ab4f8; --host-color: #E3000F; --guest-color: #0072CE; --text: #e8eaed; --chat-bg: #171717; }
         
-        body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 15px; overflow-x: hidden; }
-        h1 { margin-top: 0; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; font-size: 28px; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; overflow-x: hidden; }
+        h1 { margin-top: 0; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
         
-        .panel { background: var(--surface); padding: 25px; border-radius: 20px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); text-align: center; width: 100%; max-width: 400px; margin-bottom: 20px; box-sizing: border-box; }
+        .panel { background: var(--surface); padding: 30px; border-radius: 24px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); text-align: center; width: 350px; max-width: 90vw; margin-bottom: 20px; transition: 0.3s ease; }
         
-        .btn { padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; background-color: var(--primary); color: #202124; margin: 5px; transition: 0.2s; text-transform: uppercase; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(138, 180, 248, 0.4); }
+        .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; background-color: var(--primary); color: #202124; margin: 5px; transition: 0.2s; text-transform: uppercase; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(138, 180, 248, 0.4); }
         .btn:active { transform: translateY(0px); }
         .btn-host { background-color: var(--host-color); color: white; }
         
-        input { padding: 14px; border: 2px solid #5f6368; border-radius: 12px; width: 100%; margin-bottom: 12px; text-align: center; font-size: 16px; font-weight: bold; box-sizing: border-box; background: #202124; color: white; outline: none; transition: 0.2s; }
+        input { padding: 14px; border: 2px solid #5f6368; border-radius: 12px; width: 80%; margin-bottom: 12px; text-align: center; font-size: 16px; font-weight: bold; box-sizing: border-box; background: #202124; color: white; outline: none; transition: 0.2s; }
         input:focus { border-color: var(--primary); }
         
-        #gameNav { display: none; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; }
-        .game-section { display: none; flex-direction: column; align-items: center; background: var(--surface); padding: 15px; border-radius: 20px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); width: 100%; max-width: 600px; box-sizing: border-box; }
+        #gameNav { display: none; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
+        .game-section { display: none; flex-direction: column; align-items: center; background: var(--surface); padding: 25px; border-radius: 24px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); max-width: 100%; overflow-x: auto; }
         .active-game { display: flex; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .control-panel { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 15px; background: rgba(0,0,0,0.25); border-radius: 20px; padding: 10px; box-sizing: border-box; box-shadow: inset 0 4px 10px rgba(0,0,0,0.3); }
-        .player-zone { display: flex; flex-direction: column; align-items: center; width: auto; min-width: 80px; }
-        .player-name { font-size: 14px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); text-align: center; word-wrap: break-word; line-height: 1.2; }
-        .status-text { flex-grow: 1; font-size: 18px; font-weight: 900; text-align: center; color: #fbbc05; padding: 0 10px; line-height: 1.2; }
+        .control-panel { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 600px; margin-top: 20px; background: rgba(0,0,0,0.25); border-radius: 24px; padding: 15px; box-sizing: border-box; box-shadow: inset 0 4px 10px rgba(0,0,0,0.3); }
+        .player-zone { display: flex; flex-direction: column; align-items: center; width: 120px; }
+        .player-name { font-size: 16px; font-weight: 900; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); text-align: center; word-wrap: break-word; line-height: 1.2; }
+        .status-text { flex-grow: 1; font-size: 20px; font-weight: 900; text-align: center; color: #fbbc05; padding: 0 15px; line-height: 1.3; }
 
-        .dice { width: 60px; height: 60px; background: linear-gradient(135deg, #ffffff, #e0e0e0); border-radius: 12px; box-shadow: 0 8px 15px rgba(0,0,0,0.3), 0 5px 0 #b0b0b0; display: flex; justify-content: center; align-items: center; font-size: 45px; color: #202124; cursor: pointer; transition: all 0.15s; user-select: none; margin: 0; line-height: 1; }
-        .dice:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,0,0,0.3), 0 7px 0 #b0b0b0; }
-        .dice:active { transform: translateY(5px); box-shadow: 0 2px 5px rgba(0,0,0,0.5), 0 0 0 #b0b0b0; }
+        .dice { width: 70px; height: 70px; background: linear-gradient(135deg, #ffffff, #e0e0e0); border-radius: 16px; box-shadow: 0 8px 15px rgba(0,0,0,0.3), 0 6px 0 #b0b0b0; display: flex; justify-content: center; align-items: center; font-size: 55px; color: #202124; cursor: pointer; transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); user-select: none; margin: 0; line-height: 1; }
+        .dice:hover { transform: translateY(-3px); box-shadow: 0 12px 20px rgba(0,0,0,0.3), 0 9px 0 #b0b0b0; }
+        .dice:active { transform: translateY(6px); box-shadow: 0 2px 5px rgba(0,0,0,0.5), 0 0 0 #b0b0b0; }
         .rolling { animation: rollAnim 0.4s infinite linear; pointer-events: none; }
-        @keyframes rollAnim { 0% { transform: translateY(-5px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: translateY(-5px) rotateX(360deg) rotateY(360deg) rotateZ(360deg); } }
+        @keyframes rollAnim { 0% { transform: translateY(-10px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: translateY(-10px) rotateX(360deg) rotateY(360deg) rotateZ(360deg); } }
 
-        .ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; aspect-ratio: 1/1; max-width: 350px; gap: 3%; margin-top: 10px; }
-        .ttt-cell { width: 100%; height: 100%; background: #3c4043; display: flex; justify-content: center; align-items: center; font-size: max(40px, 10vw); font-weight: 900; cursor: pointer; border-radius: 15px; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+        .ttt-board { display: grid; grid-template-columns: repeat(3, 110px); gap: 12px; margin-top: 10px; }
+        .ttt-cell { width: 110px; height: 110px; background: #3c4043; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; cursor: pointer; border-radius: 20px; transition: 0.2s; box-shadow: inset 0 -5px 0 rgba(0,0,0,0.2); }
+        .ttt-cell:hover { background: #4a4d51; transform: scale(1.05); }
 
-        /* THE REALISTIC SNAKES & LADDERS BOARD */
-        .snakes-board { 
-            display: grid; 
-            grid-template-columns: repeat(10, 1fr); 
-            grid-template-rows: repeat(10, 1fr); 
-            width: 100%; aspect-ratio: 1/1; 
-            border: clamp(6px, 2vw, 10px) solid #E65100; /* Dark orange border */
-            position: relative; 
-            border-radius: 8px; 
-            box-shadow: 0 15px 30px rgba(0,0,0,0.6); 
-            box-sizing: border-box; 
-        }
-        .snakes-cell { 
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center; 
-            padding-bottom: 5%; 
-            font-size: clamp(10px, 3vw, 15px); font-weight: 900; color: #D84315; 
-            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
-            position: relative; user-select: none; 
-            border: 1px solid rgba(0,0,0,0.05); /* Soft inner grid lines */
-        }
-        #snakesSvg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .snakes-board { display: grid; grid-template-columns: repeat(10, 45px); grid-template-rows: repeat(10, 45px); border: 8px solid #3c4043; background-color: #fbbc05; position: relative; border-radius: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .snakes-cell { border: 1px solid rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: #202124; position: relative; }
+        .snakes-cell:nth-child(even) { background-color: #f29900; }
+        .portal-emoji { position: absolute; font-size: 26px; z-index: 3; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); top: -10px; left: -10px; }
         
-        .token { width: 24px; height: 24px; border-radius: 50%; position: absolute; border: 3px solid white; z-index: 10; box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .token { width: 22px; height: 22px; border-radius: 50%; position: absolute; top: 0; left: 0; border: 3px solid white; z-index: 10; box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .token.Host { background: radial-gradient(circle at 30% 30%, #ff8a80, #E3000F); }
         .token.Guest { background: radial-gradient(circle at 30% 30%, #8c9eff, #0072CE); }
 
-        canvas { width: 100%; max-width: 600px; aspect-ratio: 1/1; background: #fff; border-radius: 12px; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+        canvas { background: #fff; border-radius: 8px; cursor: pointer; max-width: 100%; height: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
 
-        /* FLOATING CHAT */
-        #chatToggleBtn { display: none; position: fixed; bottom: 20px; right: 20px; width: 55px; height: 55px; background-color: var(--primary); border-radius: 50%; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.6); z-index: 1001; }
-        .chat-badge { display: none; position: absolute; top: -2px; right: -2px; background: #E3000F; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; justify-content: center; align-items: center; border: 2px solid var(--bg); }
-        #chatPanel { display: none; position: fixed; bottom: 85px; right: 20px; width: 300px; max-width: 85vw; background: var(--surface); padding: 15px; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.7); z-index: 1000; animation: slideUp 0.2s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: var(--primary); font-size: 16px; }
-        .close-chat { cursor: pointer; color: #9aa0a6; font-size: 20px; padding: 0 5px; }
-        .chat-messages { height: 180px; background: var(--chat-bg); border-radius: 12px; padding: 10px; overflow-y: auto; text-align: left; font-size: 13px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #3c4043; }
+        #chatToggleBtn { display: none; position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary); border-radius: 50%; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.6); z-index: 1001; transition: 0.3s; }
+        #chatToggleBtn:hover { transform: scale(1.1); }
+        .chat-badge { display: none; position: absolute; top: -5px; right: -5px; background: #E3000F; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); border: 2px solid var(--bg); }
+        #chatPanel { display: none; position: fixed; bottom: 90px; right: 20px; width: 320px; max-width: 85vw; background: var(--surface); padding: 20px; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.7); z-index: 1000; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: var(--primary); font-size: 18px; }
+        .close-chat { cursor: pointer; color: #9aa0a6; font-size: 20px; transition: 0.2s; }
+        .chat-messages { height: 200px; background: var(--chat-bg); border-radius: 12px; padding: 12px; overflow-y: auto; text-align: left; font-size: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #3c4043; }
         .chat-input-row { display: flex; gap: 8px; }
-        .chat-input-row input { margin: 0; width: 100%; padding: 10px; font-size: 14px; border-radius: 50px; }
-        .chat-input-row button { margin: 0; padding: 10px 15px; font-size: 14px; border-radius: 50px; }
-        .msg-system { color: #9aa0a6; font-style: italic; text-align: center; font-size: 11px; }
-        .msg-me { color: #202124; background: var(--primary); padding: 8px 12px; border-radius: 12px 12px 0 12px; align-self: flex-end; max-width: 80%; word-wrap: break-word; font-weight: bold;}
-        .msg-them { color: white; background: #3c4043; padding: 8px 12px; border-radius: 12px 12px 12px 0; align-self: flex-start; max-width: 80%; word-wrap: break-word; }
-
-        @media (max-width: 400px) {
-            .dice { width: 50px; height: 50px; font-size: 35px; }
-            .status-text { font-size: 16px; }
-            .player-name { font-size: 12px; }
-            .btn { font-size: 13px; padding: 10px 14px; }
-            .token { width: 18px; height: 18px; border-width: 2px; }
-        }
+        .chat-input-row input { margin: 0; width: 100%; padding: 12px; font-size: 14px; border-radius: 50px; }
+        .chat-input-row button { margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 50px; }
+        .msg-system { color: #9aa0a6; font-style: italic; text-align: center; font-size: 12px; }
+        .msg-me { color: #fff; background: rgba(138, 180, 248, 0.2); padding: 8px 12px; border-radius: 12px 12px 0 12px; align-self: flex-end; max-width: 80%; word-wrap: break-word; }
+        .msg-them { color: var(--primary); background: rgba(255, 255, 255, 0.1); padding: 8px 12px; border-radius: 12px 12px 12px 0; align-self: flex-start; max-width: 80%; word-wrap: break-word; }
     </style>
 </head>
 <body>
@@ -102,9 +78,9 @@
         <input type="text" id="playerName" placeholder="Enter Your Name" autocomplete="off" maxlength="12">
         <hr style="border: 1px solid #3c4043; margin: 20px 0;">
         <button class="btn btn-host" onclick="hostGame()">Host Game</button>
-        <p id="myIdDisplay" style="color: #34a853; font-weight: 900; font-size: 26px; margin: 15px 0; letter-spacing: 3px;"></p>
+        <p id="myIdDisplay" style="color: #34a853; font-weight: 900; font-size: 22px; margin: 15px 0; letter-spacing: 2px;"></p>
         <hr style="border: 1px solid #3c4043; margin: 20px 0;">
-        <input type="text" id="joinId" placeholder="Friend's ID" autocomplete="off" style="text-transform: uppercase;">
+        <input type="text" id="joinId" placeholder="Friend's Game ID" autocomplete="off" style="text-transform: uppercase;">
         <br>
         <button class="btn" onclick="joinGame()">Join Game</button>
     </div>
@@ -112,12 +88,12 @@
     <div id="gameNav">
         <button class="btn" onclick="switchGame('ttt')">Tic-Tac-Toe</button>
         <button class="btn" onclick="switchGame('snakes')">Snakes & Ladders</button>
-        <button class="btn" onclick="switchGame('ludo')">Ludo Board</button>
+        <button class="btn" onclick="switchGame('ludo')">Ludo Pro</button>
     </div>
 
     <div id="ttt" class="game-section">
         <div class="ttt-board" id="tttBoard"></div>
-        <button class="btn" onclick="resetTTT()" style="margin-top: 15px; display: none;" id="tttReset">Play Again</button>
+        <button class="btn" onclick="resetTTT()" style="margin-top: 20px; display: none;" id="tttReset">Play Again</button>
         <div class="control-panel">
             <div class="player-zone"><div class="player-name" style="color: var(--host-color);" id="tttHostName">Host ❌</div></div>
             <div class="status-text" id="tttStatus">Tic-Tac-Toe</div>
@@ -127,9 +103,9 @@
 
     <div id="snakes" class="game-section">
         <div class="snakes-board" id="snakesBoard">
-            <svg id="snakesSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+            <svg id="snakesSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;"></svg>
         </div>
-        <button class="btn" onclick="resetSnakes()" style="margin-top: 15px; display: none;" id="snakesReset">Play Again</button>
+        <button class="btn" onclick="resetSnakes()" style="margin-top: 20px; display: none;" id="snakesReset">Play Again</button>
         <div class="control-panel">
             <div class="player-zone">
                 <div class="player-name" style="color: var(--host-color);" id="snakesHostName">Host 🔴</div>
@@ -145,7 +121,7 @@
 
     <div id="ludo" class="game-section">
         <canvas id="ludoCanvas"></canvas>
-        <button class="btn" onclick="resetLudo()" style="margin-top: 15px; display: none;" id="ludoReset">Play Again</button>
+        <button class="btn" onclick="resetLudo()" style="margin-top: 20px; display: none;" id="ludoReset">Play Again</button>
         <div class="control-panel">
             <div class="player-zone">
                 <div class="player-name" style="color: var(--host-color);" id="ludoHostName">Host 🔴</div>
@@ -171,7 +147,7 @@
 
     <script>
         // ==========================================
-        // 1. P2P NETWORKING & RECONNECTION
+        // 1. P2P NETWORKING, RECONNECTION & ANTI-CHEAT
         // ==========================================
         let peer, connection, myRole = '';
         let myName = 'Player 1', friendName = 'Player 2';
@@ -186,7 +162,7 @@
             return new Promise((resolve) => {
                 peer = new Peer(randomId, { debug: 3 });
                 peer.on('open', id => resolve(id));
-                peer.on('error', err => { alert("Connection Error: [" + err.type + "]"); document.getElementById('myIdDisplay').innerText = "Failed."; });
+                peer.on('error', err => { alert("Connection Error: [" + err.type + "]"); document.getElementById('myIdDisplay').innerText = "Connection Failed."; });
             });
         }
 
@@ -198,12 +174,15 @@
                 peer.on('connection', (conn) => { 
                     connection = conn; 
                     setupConnectionListeners();
+                    
                     conn.on('open', () => {
                         if (document.getElementById('setupPanel').style.display === 'none') {
+                            // RECONNECTION: Host is already playing, sync state to joining Guest
                             conn.send({ type: 'reconnectSync', ludoState, sllPlayers, sllTurn, portals, tttBoard, isMyTurnTTT: !isMyTurnTTT, hostName: myName });
                             appendChat('System', `Guest Reconnected!`);
                         } else {
-                            myRole = 'Host'; startGame(); 
+                            myRole = 'Host'; 
+                            startGame(); 
                         }
                     });
                 }); 
@@ -215,15 +194,20 @@
             if (!friendId) return alert("Please enter an ID first!"); 
             await initPeer(); 
             connection = peer.connect(friendId); 
-            connection.on('open', () => { myRole = 'Guest'; setupConnectionListeners(); startGame(); }); 
+            connection.on('open', () => { 
+                myRole = 'Guest'; 
+                setupConnectionListeners();
+                startGame(); 
+            }); 
         }
 
         function startGame() {
             document.getElementById('setupPanel').style.display = 'none'; document.getElementById('gameNav').style.display = 'flex'; document.getElementById('chatToggleBtn').style.display = 'flex';
-            updateNameUI(); connection.send({ type: 'init', name: myName }); appendChat('System', `You joined as ${myName}.`);
+            updateNameUI();
+            connection.send({ type: 'init', name: myName }); appendChat('System', `You joined as ${myName}.`);
 
             if(myRole === 'Host') { portals = generateRandomPortals(); connection.send({ type: 'initSnakesMap', portals: portals }); initSnakes(); }
-            initTTT(); initLudo(); switchGame('snakes');
+            initTTT(); initLudo(); switchGame('ludo');
         }
 
         function updateNameUI() {
@@ -239,16 +223,20 @@
                     friendName = data.name; updateNameUI(); appendChat('System', `${friendName} connected!`); updateAllUI();
                 }
                 if (data.type === 'reconnectSync') {
+                    // We are a Guest re-joining an ongoing game!
                     friendName = data.hostName; ludoState = data.ludoState; sllPlayers = data.sllPlayers; sllTurn = data.sllTurn; portals = data.portals; tttBoard = data.tttBoard; isMyTurnTTT = data.isMyTurnTTT;
                     document.getElementById('setupPanel').style.display = 'none'; document.getElementById('gameNav').style.display = 'flex'; document.getElementById('chatToggleBtn').style.display = 'flex';
-                    updateNameUI(); initSnakes(); updateAllUI(); appendChat('System', `Successfully reconnected to game!`);
+                    updateNameUI(); initSnakes(); updateAllUI();
+                    appendChat('System', `Successfully reconnected to game!`);
                 }
+                
                 if (data.type === 'chat') appendChat(friendName, data.msg, 'msg-them');
                 if (data.game === 'ttt') handleTTTMove(data.index, data.player); if (data.game === 'tttReset') initTTT();
                 if (data.type === 'initSnakesMap') { portals = data.portals; initSnakes(); }
                 if (data.game === 'snakes') handleSnakesSync(data); if (data.game === 'snakesReset') handleSnakesReset(data);
                 if (data.game === 'ludoSync') handleLudoSync(data); if (data.game === 'ludoReset') handleLudoReset(data);
 
+                // AUTHORITATIVE HOST: Listen for Guest requests
                 if (data.type === 'requestRoll' && myRole === 'Host') {
                     const gDice = document.getElementById(`${data.game}DiceGuest`);
                     if(gDice) { gDice.classList.add('rolling'); isRolling = true; }
@@ -276,6 +264,7 @@
         function switchGame(gameId) { document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active-game')); document.getElementById(gameId).classList.add('active-game'); updateAllUI(); }
         function updateAllUI() { if(document.getElementById('ttt').classList.contains('active-game')) document.getElementById('tttStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; updateLudoUI(); updateDiceTurnUI(); }
 
+        // ANTI-CHEAT DICE LOGIC
         function rollUniversalDice(gameType, clickedRole) {
             if (clickedRole !== myRole) return;
             if(gameType === 'ludo' && (ludoState.turn !== myRole || ludoState.hasRolled)) return;
@@ -283,14 +272,21 @@
             if (isRolling) return;
             
             isRolling = true; const dice = document.getElementById(`${gameType}Dice${clickedRole}`); dice.classList.add('rolling');
-            if (myRole === 'Guest') connection.send({ type: 'requestRoll', game: gameType });
-            else setTimeout(() => { executeRoll(gameType, 'Host'); }, 400);
+            
+            if (myRole === 'Guest') {
+                // Request the authoritative Host to roll
+                connection.send({ type: 'requestRoll', game: gameType });
+            } else {
+                // Host rolls immediately
+                setTimeout(() => { executeRoll(gameType, 'Host'); }, 500);
+            }
         }
 
         function executeRoll(gameType, role) {
             const finalRoll = Math.floor(Math.random() * 6) + 1; 
             const dice = document.getElementById(`${gameType}Dice${role}`);
             dice.innerText = diceFaces[finalRoll]; dice.classList.remove('rolling'); isRolling = false;
+            
             if (gameType === 'snakes') processSnakesRoll(finalRoll, role); 
             if (gameType === 'ludo') processLudoRoll(finalRoll, role);
         }
@@ -308,7 +304,7 @@
         function resetTTT() { connection.send({ game: 'tttReset' }); initTTT(); }
 
         // ==========================================
-        // 3. SNAKES & LADDERS (PROCEDURAL DRAWING)
+        // 3. SNAKES & LADDERS
         // ==========================================
         let sllPlayers = { 'Host': { pos: 1, class: 'Host' }, 'Guest': { pos: 1, class: 'Guest' } };
         let sllTurn = 'Host';
@@ -316,7 +312,6 @@
         
         function generateRandomPortals() {
             let newPortals = {}; let used = new Set([1, 100]); 
-            // Creates 6 random ladders and 6 random snakes
             for(let i=0; i<6; i++) { let start = getRandFree(used, 2, 80); let end = getRandFree(used, start + 10, 99); newPortals[start] = end; used.add(start); used.add(end); }
             for(let i=0; i<6; i++) { let start = getRandFree(used, 20, 99); let end = getRandFree(used, 2, start - 10); newPortals[start] = end; used.add(start); used.add(end); }
             return newPortals;
@@ -331,17 +326,8 @@
                 let cells = []; for (let c = 1; c <= 10; c++) cells.push((r - 1) * 10 + c); 
                 if (!l2r) cells.reverse(); 
                 cells.forEach((num, index) => { 
-                    const cell = document.createElement('div'); cell.className = 'snakes-cell'; cell.id = `scell-${num}`; 
-                    
-                    // Add Party Popper to 100
-                    if(num === 100) cell.innerHTML = '<span style="font-size:1.5em; line-height:1;">🎉</span><span>100</span>';
-                    else cell.innerText = num; 
-
-                    // Authentic Checkerboard logic matching the reference image
-                    let isDark = (r + index) % 2 === 0;
-                    if(isDark) cell.style.backgroundColor = '#FFB347'; // Orange
-                    else cell.style.backgroundColor = '#FFDE59'; // Yellow
-
+                    const cell = document.createElement('div'); cell.className = 'snakes-cell'; cell.id = `scell-${num}`; cell.innerText = num; 
+                    if((r + index) % 2 === 0) cell.style.backgroundColor = '#ffca3a'; else cell.style.backgroundColor = '#ffea00';
                     board.appendChild(cell); 
                 }); 
                 l2r = !l2r; 
@@ -349,55 +335,29 @@
             setTimeout(() => { drawPortalsSVG(); setupTokens(); updateDiceTurnUI(); }, 50);
         }
 
-        // Percentage based centers for drawing
-        function getCellCenter(num) {
-            let rowFromBottom = Math.floor((num - 1) / 10); let rowFromTop = 9 - rowFromBottom;
-            let col = (num - 1) % 10; if (rowFromBottom % 2 !== 0) col = 9 - col;
-            return { x: (col * 10) + 5, y: (rowFromTop * 10) + 5 };
-        }
-
         function drawPortalsSVG() {
             const svg = document.getElementById('snakesSvg'); svg.innerHTML = ''; 
             Object.keys(portals).forEach(start => {
-                let end = portals[start]; 
-                let startCell = document.getElementById(`scell-${start}`);
-                if(startCell) {
-                    let p1 = getCellCenter(start); let p2 = getCellCenter(end);
-                    let x1 = p1.x; let y1 = p1.y; let x2 = p2.x; let y2 = p2.y;
+                let end = portals[start]; let startCell = document.getElementById(`scell-${start}`); let endCell = document.getElementById(`scell-${end}`);
+                if(startCell && endCell) {
+                    let x1 = startCell.offsetLeft + startCell.offsetWidth/2; let y1 = startCell.offsetTop + startCell.offsetHeight/2;
+                    let x2 = endCell.offsetLeft + endCell.offsetWidth/2; let y2 = endCell.offsetTop + endCell.offsetHeight/2;
                     let isLadder = end > start; let dx = x2 - x1; let dy = y2 - y1; let len = Math.sqrt(dx*dx + dy*dy); let nx = -dy / len; let ny = dx / len;
 
                     if(isLadder) {
-                        // Drawing Beautiful Ladders
-                        let r = 1.8; 
-                        let rail1 = `<line x1="${x1 + nx*r}" y1="${y1 + ny*r}" x2="${x2 + nx*r}" y2="${y2 + ny*r}" stroke="#1E88E5" stroke-width="1.2" stroke-linecap="round" />`;
-                        let rail2 = `<line x1="${x1 - nx*r}" y1="${y1 - ny*r}" x2="${x2 - nx*r}" y2="${y2 - ny*r}" stroke="#1E88E5" stroke-width="1.2" stroke-linecap="round" />`;
+                        let r = 8; let rail1 = `<line x1="${x1 + nx*r}" y1="${y1 + ny*r}" x2="${x2 + nx*r}" y2="${y2 + ny*r}" stroke="#4285f4" stroke-width="4" stroke-linecap="round" />`;
+                        let rail2 = `<line x1="${x1 - nx*r}" y1="${y1 - ny*r}" x2="${x2 - nx*r}" y2="${y2 - ny*r}" stroke="#4285f4" stroke-width="4" stroke-linecap="round" />`;
                         svg.innerHTML += rail1 + rail2;
-                        let steps = Math.floor(len / 3.5);
-                        for(let i=1; i<steps; i++) { 
-                            let px = x1 + dx * (i/steps); let py = y1 + dy * (i/steps); 
-                            svg.innerHTML += `<line x1="${px + nx*r}" y1="${py + ny*r}" x2="${px - nx*r}" y2="${py - ny*r}" stroke="#1E88E5" stroke-width="1" />`; 
-                        }
+                        let steps = Math.floor(len / 16);
+                        for(let i=1; i<steps; i++) { let px = x1 + dx * (i/steps); let py = y1 + dy * (i/steps); svg.innerHTML += `<line x1="${px + nx*r}" y1="${py + ny*r}" x2="${px - nx*r}" y2="${py - ny*r}" stroke="#4285f4" stroke-width="3" />`; }
                     } else {
-                        // Drawing Beautiful Spotted Snakes
-                        let curveAmp = (start % 2 === 0) ? 15 : -15; // Makes them twist left or right
-                        let c1x = x1 + dx*0.3 + nx*curveAmp; let c1y = y1 + dy*0.3 + ny*curveAmp; 
-                        let c2x = x1 + dx*0.7 - nx*curveAmp; let c2y = y1 + dy*0.7 - ny*curveAmp;
-                        
-                        // Drop Shadow
-                        svg.innerHTML += `<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="3.5" stroke-linecap="round" transform="translate(0.5, 0.8)" />`;
-                        // Base Green Body
-                        svg.innerHTML += `<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#43A047" stroke-width="2.8" stroke-linecap="round" />`;
-                        // Dark Green Spots
-                        svg.innerHTML += `<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#1B5E20" stroke-width="1.4" stroke-dasharray="0.1 3.5" stroke-linecap="round" />`;
-                        
-                        // Head & Face
-                        svg.innerHTML += `<circle cx="${x1}" cy="${y1}" r="2.5" fill="#43A047" />`;
-                        let tongueX = x1 - dx/len * 3.5; let tongueY = y1 - dy/len * 3.5;
-                        svg.innerHTML += `<path d="M ${x1} ${y1} Q ${x1 - dx/len * 2 + nx} ${y1 - dy/len * 2 + ny} ${tongueX} ${tongueY}" fill="none" stroke="#E53935" stroke-width="0.4" />`;
-                        
+                        let c1x = x1 + dx*0.3 + nx*35; let c1y = y1 + dy*0.3 + ny*35; let c2x = x1 + dx*0.7 - nx*35; let c2y = y1 + dy*0.7 - ny*35;
+                        svg.innerHTML += `<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="16" stroke-linecap="round" transform="translate(2, 4)" />`;
+                        svg.innerHTML += `<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#00A551" stroke-width="12" stroke-linecap="round" />`;
+                        svg.innerHTML += `<circle cx="${x1}" cy="${y1}" r="9" fill="#00A551" />`;
                         let eyeDirX = -dx/len; let eyeDirY = -dy/len;
-                        svg.innerHTML += `<circle cx="${x1 + nx*1.2 + eyeDirX*0.8}" cy="${y1 + ny*1.2 + eyeDirY*0.8}" r="0.8" fill="white" /><circle cx="${x1 + nx*1.2 + eyeDirX*1.2}" cy="${y1 + ny*1.2 + eyeDirY*1.2}" r="0.4" fill="black" />`;
-                        svg.innerHTML += `<circle cx="${x1 - nx*1.2 + eyeDirX*0.8}" cy="${y1 - ny*1.2 + eyeDirY*0.8}" r="0.8" fill="white" /><circle cx="${x1 - nx*1.2 + eyeDirX*1.2}" cy="${y1 - ny*1.2 + eyeDirY*1.2}" r="0.4" fill="black" />`;
+                        svg.innerHTML += `<circle cx="${x1 + nx*4 + eyeDirX*2}" cy="${y1 + ny*4 + eyeDirY*2}" r="2.5" fill="white" /><circle cx="${x1 + nx*4 + eyeDirX*3}" cy="${y1 + ny*4 + eyeDirY*3}" r="1" fill="black" />`;
+                        svg.innerHTML += `<circle cx="${x1 - nx*4 + eyeDirX*2}" cy="${y1 - ny*4 + eyeDirY*2}" r="2.5" fill="white" /><circle cx="${x1 - nx*4 + eyeDirX*3}" cy="${y1 - ny*4 + eyeDirY*3}" r="1" fill="black" />`;
                     }
                 }
             });
@@ -412,12 +372,11 @@
         }
 
         function moveTokenDOM(playerKey, pos) {
-            let tokenEl = document.getElementById(`token-${playerKey}`); 
-            if(tokenEl) {
-                let center = getCellCenter(pos);
-                let pxOffset = playerKey === 'Host' ? -4 : 4;
-                tokenEl.style.left = `calc(${center.x}% - 12px + ${pxOffset}px)`;
-                tokenEl.style.top = `calc(${center.y}% - 12px + ${pxOffset}px)`;
+            let tokenEl = document.getElementById(`token-${playerKey}`); let cell = document.getElementById(`scell-${pos}`);
+            if(tokenEl && cell) {
+                let offset = playerKey === 'Host' ? -6 : 6;
+                let centerX = cell.offsetLeft + (cell.offsetWidth / 2) - 14; let centerY = cell.offsetTop + (cell.offsetHeight / 2) - 14;
+                tokenEl.style.transform = `translate(${centerX + offset}px, ${centerY + offset}px)`;
             }
         }
 
@@ -430,7 +389,7 @@
 
             if (portals[intermediatePos]) {
                 finalPos = portals[intermediatePos];
-                if (finalPos > intermediatePos) statusMessage += ` 🪜 Climbed!`; else statusMessage += ` 🐍 Slide down!`;
+                if (finalPos > intermediatePos) statusMessage += ` 🪜 Climbed ladder!`; else statusMessage += ` 🐍 Slide down!`;
             }
 
             p.pos = finalPos; 
@@ -439,33 +398,42 @@
             else { statusMessage += " Roll again!"; }
 
             document.getElementById('snakesStatus').innerText = statusMessage;
+            
             let payload = { game: 'snakes', players: sllPlayers, roll: roll, nextTurn: sllTurn, msg: statusMessage, rolledBy: clickedRole, animData: { player: clickedRole, intPos: intermediatePos, finPos: finalPos } };
-            connection.send(payload); playSnakeAnimation(payload.animData);
+            connection.send(payload);
+            playSnakeAnimation(payload.animData);
         }
 
         function handleSnakesSync(data) { 
             sllPlayers = data.players; sllTurn = data.nextTurn; 
             document.getElementById('snakesStatus').innerText = `${friendName}: ${data.msg}`; 
+            
             const dice = document.getElementById(`snakesDice${data.rolledBy}`);
             dice.innerText = diceFaces[data.roll]; dice.classList.remove('rolling'); isRolling = false;
+            
             playSnakeAnimation(data.animData);
         }
 
         function playSnakeAnimation(data) {
             const { player, intPos, finPos } = data;
             moveTokenDOM(player, intPos);
-            document.getElementById('snakesDiceHost').style.pointerEvents = 'none'; document.getElementById('snakesDiceGuest').style.pointerEvents = 'none';
-            if(intPos !== finPos) { setTimeout(() => { moveTokenDOM(player, finPos); setTimeout(updateDiceTurnUI, 600); }, 600); } 
-            else { setTimeout(updateDiceTurnUI, 600); }
+            document.getElementById('snakesDiceHost').style.pointerEvents = 'none';
+            document.getElementById('snakesDiceGuest').style.pointerEvents = 'none';
+            
+            if(intPos !== finPos) {
+                setTimeout(() => { moveTokenDOM(player, finPos); setTimeout(updateDiceTurnUI, 600); }, 600); 
+            } else { setTimeout(updateDiceTurnUI, 600); }
         }
 
         function updateDiceTurnUI() { 
             const hDice = document.getElementById('snakesDiceHost'); const gDice = document.getElementById('snakesDiceGuest');
             if (sllTurn === 'Host') {
-                hDice.style.opacity = '1'; hDice.style.pointerEvents = myRole === 'Host' ? 'auto' : 'none'; gDice.style.opacity = '0.3'; gDice.style.pointerEvents = 'none';
+                hDice.style.opacity = '1'; hDice.style.pointerEvents = myRole === 'Host' ? 'auto' : 'none';
+                gDice.style.opacity = '0.3'; gDice.style.pointerEvents = 'none';
                 if (!document.getElementById('snakesStatus').innerText.includes("again")) document.getElementById('snakesStatus').innerText = myRole === 'Host' ? "Your Turn!" : `${friendName}'s Turn...`;
             } else if (sllTurn === 'Guest') {
-                gDice.style.opacity = '1'; gDice.style.pointerEvents = myRole === 'Guest' ? 'auto' : 'none'; hDice.style.opacity = '0.3'; hDice.style.pointerEvents = 'none';
+                gDice.style.opacity = '1'; gDice.style.pointerEvents = myRole === 'Guest' ? 'auto' : 'none';
+                hDice.style.opacity = '0.3'; hDice.style.pointerEvents = 'none';
                 if (!document.getElementById('snakesStatus').innerText.includes("again")) document.getElementById('snakesStatus').innerText = myRole === 'Guest' ? "Your Turn!" : `${friendName}'s Turn...`;
             } else {
                 hDice.style.pointerEvents = 'none'; gDice.style.pointerEvents = 'none';
@@ -475,7 +443,9 @@
 
         function resetSnakes() {
             if(myRole === 'Host') {
-                portals = generateRandomPortals(); sllPlayers = { 'Host': { pos: 1, class: 'Host' }, 'Guest': { pos: 1, class: 'Guest' } }; sllTurn = 'Host';
+                portals = generateRandomPortals();
+                sllPlayers = { 'Host': { pos: 1, class: 'Host' }, 'Guest': { pos: 1, class: 'Guest' } };
+                sllTurn = 'Host';
                 connection.send({ game: 'snakesReset', portals, sllPlayers, sllTurn });
                 initSnakes(); document.getElementById('snakesStatus').innerText = "Your Turn!"; document.getElementById('snakesReset').style.display = 'none';
             }
@@ -483,7 +453,7 @@
         function handleSnakesReset(data) { portals = data.portals; sllPlayers = data.sllPlayers; sllTurn = data.sllTurn; initSnakes(); document.getElementById('snakesStatus').innerText = `${friendName}'s Turn...`; document.getElementById('snakesReset').style.display = 'none'; }
 
         // ==========================================
-        // 4. LUDO ULTIMATE 3D ENGINE
+        // 4. LUDO ULTIMATE 3D ENGINE (Retina + Flying + Anti-Cheat)
         // ==========================================
         let ludoCanvas = document.getElementById('ludoCanvas');
         let lctx = ludoCanvas.getContext('2d');
@@ -523,8 +493,16 @@
         }
 
         function initLudo() { 
-            const dpr = window.devicePixelRatio || 1; ludoCanvas.width = logicalSize * dpr; ludoCanvas.height = logicalSize * dpr; lctx.scale(dpr, dpr);
-            requestAnimationFrame(renderLudoAnimation); updateLudoUI(); 
+            // RETINA CANVAS SCALING
+            const dpr = window.devicePixelRatio || 1;
+            ludoCanvas.width = logicalSize * dpr;
+            ludoCanvas.height = logicalSize * dpr;
+            lctx.scale(dpr, dpr);
+            ludoCanvas.style.width = logicalSize + 'px';
+            ludoCanvas.style.height = logicalSize + 'px';
+
+            requestAnimationFrame(renderLudoAnimation); 
+            updateLudoUI(); 
         }
 
         function processLudoRoll(roll, clickedRole) {
@@ -535,27 +513,46 @@
                 if (t.state === 'path') hasValidMove = true;
                 if (t.state === 'home' && t.pos + roll <= 5) hasValidMove = true;
             });
-            if (!hasValidMove) { document.getElementById('ludoStatus').innerText = `Rolled ${roll}, no moves!`; setTimeout(endLudoTurn, 1500); } 
-            else { document.getElementById('ludoStatus').innerText = `Rolled ${roll}! Tap a token.`; connection.send({ game: 'ludoSync', state: ludoState }); }
+
+            if (!hasValidMove) {
+                document.getElementById('ludoStatus').innerText = `Rolled ${roll}, no moves!`;
+                setTimeout(endLudoTurn, 1500);
+            } else {
+                document.getElementById('ludoStatus').innerText = `Rolled ${roll}! Tap a token.`;
+                connection.send({ game: 'ludoSync', state: ludoState });
+            }
         }
 
+        // ANTI-CHEAT LUDO MOVES
         ludoCanvas.onclick = (e) => {
             if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
             const rect = ludoCanvas.getBoundingClientRect(); 
-            const cx = (e.clientX - rect.left) * (logicalSize / rect.width); const cy = (e.clientY - rect.top) * (logicalSize / rect.height);
+            // Scale correctly based on actual rendered CSS size
+            const cx = (e.clientX - rect.left) * (logicalSize / rect.width); 
+            const cy = (e.clientY - rect.top) * (logicalSize / rect.height);
+            
             for (let t of ludoState.tokens[myRole]) {
+                // Click detection based on targetX (where token conceptually is) to allow fast clicking
                 if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 25) { 
-                    if (myRole === 'Guest') connection.send({ type: 'requestMove', tokenId: t.id }); else attemptLudoMove(t, ludoState.roll); 
+                    if (myRole === 'Guest') connection.send({ type: 'requestMove', tokenId: t.id });
+                    else attemptLudoMove(t, ludoState.roll); 
                     return; 
                 }
             }
         };
 
         function attemptLudoMove(t, roll) {
-            if (t.state === 'base') { if (roll !== 6) return false; t.state = 'path'; t.pos = 0; t.visualPos = 0; } 
-            else if (t.state === 'path') { t.pos += roll; if (t.pos > 50) { t.state = 'home'; t.pos = (t.pos - 50) - 1; } } 
-            else if (t.state === 'home') { if (t.pos + roll > 5) return false; t.pos += roll; if (t.pos === 5) { t.state = 'done'; appendChat('System', `🌟 ${myName} got a token HOME!`); } } 
-            else { return false; }
+            if (t.state === 'base') {
+                if (roll !== 6) return false; t.state = 'path'; t.pos = 0; t.visualPos = 0;
+            } 
+            else if (t.state === 'path') {
+                t.pos += roll; if (t.pos > 50) { t.state = 'home'; t.pos = (t.pos - 50) - 1; }
+            } 
+            else if (t.state === 'home') {
+                if (t.pos + roll > 5) return false; t.pos += roll;
+                if (t.pos === 5) { t.state = 'done'; appendChat('System', `🌟 ${myName} got a token HOME!`); }
+            } else { return false; }
+
             checkCaptures(t); endLudoTurn(); return true;
         }
 
@@ -568,6 +565,7 @@
                     if (enemy.state === 'path') {
                         let enemyActualPos = (enemy.player === 'Host') ? enemy.pos : (enemy.pos + 39) % 52;
                         if (myActualPos === enemyActualPos) {
+                            // FLYING ANIMATION TRIGGER
                             enemy.state = 'base'; enemy.pos = 0; enemy.visualPos = 0; enemy.isFlyingBack = true;
                             appendChat('System', `⚔️ ${myName} captured a token!`); ludoState.roll = 6; 
                         }
@@ -591,23 +589,47 @@
         }
 
         function handleLudoSync(data) { 
-            let oldState = ludoState; ludoState = data.state; 
-            ['Host', 'Guest'].forEach(k => { ludoState.tokens[k].forEach((t, i) => { t.x = oldState.tokens[k][i].x; t.y = oldState.tokens[k][i].y; t.z = oldState.tokens[k][i].z; t.isFlyingBack = oldState.tokens[k][i].isFlyingBack; }); });
-            if(ludoState.roll > 0) { const dice = document.getElementById(`ludoDice${ludoState.lastRolledBy}`); dice.innerText = diceFaces[ludoState.roll]; dice.classList.remove('rolling'); isRolling = false; }
-            if(data.msg === "win") { document.getElementById('ludoStatus').innerText = `🏆 ${friendName} WINS! 🏆`; if(myRole==='Host') document.getElementById('ludoReset').style.display='inline-block'; } else updateLudoUI(); 
+            // Preserve isFlyingBack local animation states if they exist
+            let oldState = ludoState;
+            ludoState = data.state; 
+            ['Host', 'Guest'].forEach(k => {
+                ludoState.tokens[k].forEach((t, i) => {
+                    t.x = oldState.tokens[k][i].x; t.y = oldState.tokens[k][i].y; t.z = oldState.tokens[k][i].z; t.isFlyingBack = oldState.tokens[k][i].isFlyingBack;
+                });
+            });
+
+            if(ludoState.roll > 0) {
+                const dice = document.getElementById(`ludoDice${ludoState.lastRolledBy}`);
+                dice.innerText = diceFaces[ludoState.roll]; dice.classList.remove('rolling'); isRolling = false;
+            }
+            if(data.msg === "win") { document.getElementById('ludoStatus').innerText = `🏆 ${friendName} WINS! 🏆`; if(myRole==='Host') document.getElementById('ludoReset').style.display='inline-block'; }
+            else updateLudoUI(); 
         }
 
-        function resetLudo() { if(myRole === 'Host') { ludoState = getInitialLudoState(); connection.send({ game: 'ludoReset', state: ludoState }); document.getElementById('ludoReset').style.display = 'none'; updateLudoUI(); } }
-        function handleLudoReset(data) { ludoState = data.state; document.getElementById('ludoReset').style.display = 'none'; updateLudoUI(); }
+        function resetLudo() {
+            if(myRole === 'Host') {
+                ludoState = getInitialLudoState();
+                connection.send({ game: 'ludoReset', state: ludoState });
+                document.getElementById('ludoReset').style.display = 'none';
+                updateLudoUI();
+            }
+        }
+        function handleLudoReset(data) {
+            ludoState = data.state;
+            document.getElementById('ludoReset').style.display = 'none';
+            updateLudoUI();
+        }
 
         function updateLudoUI() {
             if(document.getElementById('ludo').classList.contains('active-game') && ludoState.turn !== 'none') {
                 const hDice = document.getElementById('ludoDiceHost'); const gDice = document.getElementById('ludoDiceGuest');
                 if (ludoState.turn === 'Host') {
-                    hDice.style.opacity = '1'; hDice.style.pointerEvents = (myRole === 'Host' && !ludoState.hasRolled) ? 'auto' : 'none'; gDice.style.opacity = '0.3'; gDice.style.pointerEvents = 'none';
+                    hDice.style.opacity = '1'; hDice.style.pointerEvents = (myRole === 'Host' && !ludoState.hasRolled) ? 'auto' : 'none';
+                    gDice.style.opacity = '0.3'; gDice.style.pointerEvents = 'none';
                     if (!ludoState.hasRolled) document.getElementById('ludoStatus').innerText = myRole === 'Host' ? "Your Turn! Tap the dice." : `${friendName}'s Turn...`;
                 } else {
-                    gDice.style.opacity = '1'; gDice.style.pointerEvents = (myRole === 'Guest' && !ludoState.hasRolled) ? 'auto' : 'none'; hDice.style.opacity = '0.3'; hDice.style.pointerEvents = 'none';
+                    gDice.style.opacity = '1'; gDice.style.pointerEvents = (myRole === 'Guest' && !ludoState.hasRolled) ? 'auto' : 'none';
+                    hDice.style.opacity = '0.3'; hDice.style.pointerEvents = 'none';
                     if (!ludoState.hasRolled) document.getElementById('ludoStatus').innerText = myRole === 'Guest' ? "Your Turn! Tap the dice." : `${friendName}'s Turn...`;
                 }
             }
@@ -616,17 +638,21 @@
         function drawPawn(ctx, x, y, color, zHeight = 0) {
             y = y - zHeight;
             let darkColor = color === 'Host' ? '#990000' : '#003399'; let midColor = color === 'Host' ? '#E3000F' : '#0072CE'; let lightColor = color === 'Host' ? '#ff6666' : '#66a3ff';
+
             ctx.beginPath(); ctx.ellipse(x, y + zHeight + 5, 12, 6, 0, 0, Math.PI*2); ctx.fillStyle = `rgba(0,0,0,${zHeight > 0 ? 0.15 : 0.35})`; ctx.fill();
             ctx.beginPath(); ctx.ellipse(x, y + 4, 13, 6, 0, 0, Math.PI*2); ctx.fillStyle = darkColor; ctx.fill();
             ctx.beginPath(); ctx.ellipse(x, y + 2, 13, 6, 0, 0, Math.PI*2); ctx.fillStyle = midColor; ctx.fill();
+
             ctx.beginPath(); ctx.moveTo(x - 12, y + 2); ctx.lineTo(x + 12, y + 2); ctx.lineTo(x + 5, y - 10); ctx.lineTo(x - 5, y - 10);
             let grad = ctx.createLinearGradient(x - 12, 0, x + 12, 0); grad.addColorStop(0, darkColor); grad.addColorStop(0.3, midColor); grad.addColorStop(0.7, lightColor); grad.addColorStop(1, darkColor); ctx.fillStyle = grad; ctx.fill();
+
             ctx.beginPath(); ctx.arc(x, y - 14, 9, 0, Math.PI*2);
             let headGrad = ctx.createRadialGradient(x - 3, y - 17, 2, x, y - 14, 9); headGrad.addColorStop(0, lightColor); headGrad.addColorStop(0.6, midColor); headGrad.addColorStop(1, darkColor); ctx.fillStyle = headGrad; ctx.fill();
             ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 1; ctx.stroke();
         }
 
         function renderLudoAnimation() {
+            // BATTERY SAVER
             if (!document.getElementById('ludo').classList.contains('active-game')) { requestAnimationFrame(renderLudoAnimation); return; }
 
             Object.values(ludoState.tokens).flat().forEach(t => {
@@ -646,19 +672,23 @@
                 else if (t.state === 'done') { t.targetX = t.player === 'Host' ? 7.5 * CS : 8.5 * CS; t.targetY = 7.5 * CS; }
             });
 
+            // GHOST TOKEN FIX
             let occupied = {};
             Object.values(ludoState.tokens).flat().forEach(t => {
                 if (t.state !== 'base' && !t.isFlyingBack) { let key = Math.round(t.targetX) + '_' + Math.round(t.targetY); if (!occupied[key]) occupied[key] = []; occupied[key].push(t); }
             });
             for (let key in occupied) {
                 let group = occupied[key];
-                if (group.length > 1) { let offsetR = 8; group.forEach((t, index) => { let angle = (Math.PI * 2 * index) / group.length; t.targetX += Math.cos(angle) * offsetR; t.targetY += Math.sin(angle) * offsetR; }); }
+                if (group.length > 1) {
+                    let offsetR = 8; group.forEach((t, index) => { let angle = (Math.PI * 2 * index) / group.length; t.targetX += Math.cos(angle) * offsetR; t.targetY += Math.sin(angle) * offsetR; });
+                }
             }
 
+            // PHYSICS: GLIDE OR FLY
             Object.values(ludoState.tokens).flat().forEach(t => {
                 let dx = t.targetX - t.x; let dy = t.targetY - t.y; 
                 if (t.isFlyingBack) {
-                    t.x += dx * 0.12; t.y += dy * 0.12; t.z = 40; 
+                    t.x += dx * 0.12; t.y += dy * 0.12; t.z = 40; // High arc flying
                     if(Math.abs(dx) < 2 && Math.abs(dy) < 2) { t.isFlyingBack = false; t.z = 0; t.x = t.targetX; t.y = t.targetY; }
                 } else {
                     t.x += dx * 0.4; t.y += dy * 0.4;
