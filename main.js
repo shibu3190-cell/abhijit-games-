@@ -195,14 +195,14 @@ function drawPortalsSVG() {
             let x1=c1.offsetLeft+c1.offsetWidth/2, y1=c1.offsetTop+c1.offsetHeight/2, x2=c2.offsetLeft+c2.offsetWidth/2, y2=c2.offsetTop+c2.offsetHeight/2;
             let isLadder = e > s; let dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy), nx=-dy/len, ny=dx/len;
             if(isLadder) {
-                // Ladder Graphic: Wooden rails & rungs
-                let r=8, r1=`<line x1="${x1+nx*r}" y1="${y1+ny*r}" x2="${x2+nx*r}" y2="${y2+ny*r}" stroke="#8B4513" stroke-width="5" stroke-linecap="round" />`, r2=`<line x1="${x1-nx*r}" y1="${y1-ny*r}" x2="${x2-nx*r}" y2="${y2-ny*r}" stroke="#8B4513" stroke-width="5" stroke-linecap="round" />`; svg.innerHTML+=r1+r2;
-                let st=Math.floor(len/16); for(let i=1;i<=st;i++){ let px=x1+dx*(i/(st+1)), py=y1+dy*(i/(st+1)); svg.innerHTML+=`<line x1="${px+nx*r}" y1="${py+ny*r}" x2="${px-nx*r}" y2="${py-ny*r}" stroke="#A0522D" stroke-width="4" />`; }
+                let r=12, r1=`<line x1="${x1+nx*r}" y1="${y1+ny*r}" x2="${x2+nx*r}" y2="${y2+ny*r}" stroke="#654321" stroke-width="8" stroke-linecap="round" />`, r2=`<line x1="${x1-nx*r}" y1="${y1-ny*r}" x2="${x2-nx*r}" y2="${y2-ny*r}" stroke="#654321" stroke-width="8" stroke-linecap="round" />`; svg.innerHTML+=r1+r2;
+                let st=Math.floor(len/20); for(let i=1;i<=st;i++){ let px=x1+dx*(i/(st+1)), py=y1+dy*(i/(st+1)); svg.innerHTML+=`<line x1="${px+nx*r}" y1="${py+ny*r}" x2="${px-nx*r}" y2="${py-ny*r}" stroke="#8b5a2b" stroke-width="6" />`; }
             } else {
-                // Snake Graphic: Curved body & red head
-                let c1x=x1+dx*0.3+nx*40, c1y=y1+dy*0.3+ny*40, c2x=x1+dx*0.7-nx*40, c2y=y1+dy*0.7-ny*40;
-                svg.innerHTML+=`<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#2e7d32" stroke-width="12" stroke-linecap="round" />`;
-                svg.innerHTML+=`<circle cx="${x1}" cy="${y1}" r="8" fill="#d32f2f" />`; // Head
+                let c1x=x1+dx*0.2+nx*50, c1y=y1+dy*0.2+ny*50, c2x=x1+dx*0.8-nx*50, c2y=y1+dy*0.8-ny*50;
+                svg.innerHTML+=`<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#1b5e20" stroke-width="16" stroke-linecap="round" />`;
+                svg.innerHTML+=`<path d="M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}" fill="none" stroke="#4caf50" stroke-width="8" stroke-dasharray="10 5" stroke-linecap="round" />`;
+                svg.innerHTML+=`<circle cx="${x1}" cy="${y1}" r="10" fill="#d32f2f" />`; 
+                svg.innerHTML+=`<circle cx="${x1-3}" cy="${y1-3}" r="3" fill="#fff" /><circle cx="${x1+3}" cy="${y1-3}" r="3" fill="#fff" />`; 
             }
         }
     });
@@ -258,11 +258,12 @@ function updateDiceTurnUI() {
 }
 
 // ==========================================
-// 4. LUDO PRO - TOKEN LOGIC FIXED
+// 4. LUDO PRO - FULLY REBUILT ENGINE
 // ==========================================
 let ludoCanvas = document.getElementById('ludoCanvas'); let lctx = ludoCanvas.getContext('2d'); const CS = 40; const logicalSize = 600;
 let isLudoRendering = false; 
 
+// Continuous Index 0-56 simplifies all math
 const ludoPath = [[6,13],[6,12],[6,11],[6,10],[6,9],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8],[0,7],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,5],[6,4],[6,3],[6,2],[6,1],[6,0],[7,0],[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],[14,7],[14,8],[13,8],[12,8],[11,8],[10,8],[9,8],[8,9],[8,10],[8,11],[8,12],[8,13],[8,14],[7,14],[6,14]];
 const safeZones = [0, 8, 13, 21, 26, 34, 39, 47];
 const redHomePath = [[7,13],[7,12],[7,11],[7,10],[7,9]]; const yellowHomePath = [[7,1],[7,2],[7,3],[7,4],[7,5]];
@@ -274,20 +275,14 @@ function initLudo() {
     if (!ludoCanvas.hasAttribute('data-scaled')) {
         const dpr = window.devicePixelRatio || 1; ludoCanvas.width = logicalSize * dpr; ludoCanvas.height = logicalSize * dpr;
         lctx.scale(dpr, dpr); ludoCanvas.setAttribute('data-scaled', 'true');
+        attachLudoEvents();
     }
     if(!isLudoRendering) { isLudoRendering = true; requestAnimationFrame(renderLudoAnimation); }
     updateLudoUI(); 
 }
 
 function processLudoRoll(roll, role) {
-    ludoState.roll=roll; ludoState.hasRolled=true; let valid=false;
-    
-    // FIX 1: Correctly validate if ANY token can move (either out of base on a 6, or along the path)
-    ludoState.tokens[role].forEach(t => { 
-        if(t.state==='base' && roll===6) valid=true; 
-        if(t.state==='path' && t.pos+roll<=56) valid=true; 
-        if(t.state==='home' && t.pos+roll<=5) valid=true; 
-    });
+    ludoState.roll=roll; ludoState.hasRolled=true; 
     
     if(roll === 6) lConsec6s++; else lConsec6s = 0;
     if(lConsec6s === 3) {
@@ -296,55 +291,74 @@ function processLudoRoll(roll, role) {
         connection.send({type: 'ludoSync', state: ludoState}); updateLudoUI(); return;
     }
 
-    if(!valid){ 
+    let validTokens = [];
+    ludoState.tokens[role].forEach(t => { 
+        if(t.state==='base' && roll===6) validTokens.push(t); 
+        else if((t.state==='path' || t.state==='home') && t.pos+roll<=56) validTokens.push(t); 
+    });
+
+    if(validTokens.length === 0){ 
         if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}, no moves.`; 
         setTimeout(()=>endLudoTurn(false), 1200); 
     } else { 
         if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Rolled ${roll}! Tap a token.`; 
         connection.send({type: 'ludoSync', state: ludoState}); 
-    }
-}
-
-function handleLudoTap(cx, cy) {
-    if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
-    for (let t of ludoState.tokens[myRole]) {
-        if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 40) { 
-            // FIX 2: Validate the specific tapped token to prevent freezing on invalid taps
-            if(t.state==='base' && ludoState.roll !== 6) continue;
-            if(t.state==='path' && t.pos + ludoState.roll > 56) continue;
-            if(t.state==='home' && t.pos + ludoState.roll > 5) continue;
-            if(t.state==='done') continue;
-
-            if(myRole==='Guest') connection.send({type:'requestLudoMove', tokenId:t.id}); 
-            else attemptLudoMove(t, ludoState.roll); 
-            return; 
+        
+        // AUTO-MOVE ENGINE: Prevents stuck feeling if only 1 option
+        if (validTokens.length === 1 && myRole === 'Host') {
+            setTimeout(() => { if (ludoState.hasRolled && ludoState.turn === role) attemptLudoMove(validTokens[0], roll); }, 400);
         }
     }
 }
 
-ludoCanvas.addEventListener("touchstart", (e) => { 
-    e.preventDefault(); 
-    if(e.touches.length>0){ 
-        const rect=ludoCanvas.getBoundingClientRect(); 
+function attachLudoEvents() {
+    const handler = (e) => {
+        e.preventDefault();
+        if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
+        const rect = ludoCanvas.getBoundingClientRect();
         const scaleX = logicalSize / rect.width;
         const scaleY = logicalSize / rect.height;
-        handleLudoTap((e.touches[0].clientX-rect.left)*scaleX, (e.touches[0].clientY-rect.top)*scaleY); 
-    } 
-}, {passive: false});
+        let cx = (e.type === 'touchstart' ? e.touches[0].clientX : e.clientX - rect.left) * scaleX;
+        let cy = (e.type === 'touchstart' ? e.touches[0].clientY : e.clientY - rect.top) * scaleY;
+
+        for (let t of ludoState.tokens[myRole]) {
+            if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 45) { // 45px Hitbox
+                if(t.state==='base' && ludoState.roll !== 6) continue;
+                if((t.state==='path' || t.state==='home') && t.pos + ludoState.roll > 56) continue;
+                if(t.state==='done') continue;
+
+                if(myRole==='Guest') connection.send({type:'requestLudoMove', tokenId:t.id}); 
+                else attemptLudoMove(t, ludoState.roll); 
+                return; 
+            }
+        }
+    };
+    ludoCanvas.addEventListener("touchstart", handler, {passive: false});
+    ludoCanvas.addEventListener("click", handler);
+}
 
 function attemptLudoMove(t, roll) {
     if(t.state==='base') { if(roll!==6) return false; t.state='path'; t.pos=0; t.visualPos=0; } 
-    else if(t.state==='path') { if(t.pos+roll>56) return false; t.pos+=roll; if(t.pos>50){ t.state='home'; t.pos=(t.pos-50)-1; } } 
-    else if(t.state==='home') { if(t.pos+roll>5) return false; t.pos+=roll; if(t.pos===5){ t.state='done'; appendChat('System', `🌟 Token HOME!`); } } 
+    else if(t.state==='path' || t.state==='home') { 
+        if(t.pos+roll>56) return false; 
+        t.pos+=roll; 
+        if(t.pos >= 51 && t.pos < 56) t.state = 'home';
+        if(t.pos === 56){ t.state='done'; appendChat('System', `🌟 Token HOME!`); } 
+    } 
     else return false;
+    
     let cap = checkCaptures(t); endLudoTurn(cap); return true;
 }
 
 function checkCaptures(myT) {
-    if(myT.state!=='path') return false; let myP = (myT.player==='Host') ? myT.pos : (myT.pos+26)%52; let cap=false;
+    if(myT.state !== 'path' || myT.pos > 50) return false; 
+    let myP = (myT.player==='Host') ? myT.pos : (myT.pos+26)%52; let cap=false;
     if(!safeZones.includes(myP)) {
         ludoState.tokens[myRole==='Host'?'Guest':'Host'].forEach(e => {
-            if(e.state==='path' && ((e.player==='Host'?e.pos:(e.pos+26)%52) === myP)) { e.state='base'; e.pos=0; e.visualPos=0; e.isFlyingBack=true; e.flyDist=Math.sqrt(Math.pow(e.bx-e.x,2)+Math.pow(e.by-e.y,2)); appendChat('System', `⚔️ Captured! Extra turn!`); cap=true; }
+            if(e.state==='path' && e.pos <= 50 && ((e.player==='Host'?e.pos:(e.pos+26)%52) === myP)) { 
+                e.state='base'; e.pos=0; e.visualPos=0; e.isFlyingBack=true; e.flyDist=Math.sqrt(Math.pow(e.bx-e.x,2)+Math.pow(e.by-e.y,2)); 
+                appendChat('System', `⚔️ Captured! Extra turn!`); cap=true; 
+            }
         });
     } return cap;
 }
@@ -389,9 +403,22 @@ function renderLudoAnimation() {
     if(document.hidden || activeGame !== 'ludo') { requestAnimationFrame(renderLudoAnimation); return; } 
     Object.values(ludoState.tokens).flat().forEach(t => {
         if (t.visualPos !== t.pos && !t.isFlyingBack) { let diff=t.pos-t.visualPos; t.visualPos += Math.sign(diff)*Math.min(Math.abs(diff), 0.15); if(Math.abs(t.pos-t.visualPos)<0.01) t.visualPos=t.pos; }
+        
         if(t.state==='base'){ t.targetX=t.bx; t.targetY=t.by; } 
-        else if(t.state==='path'){ let o=t.player==='Host'?0:26, i1=Math.floor(t.visualPos), i2=Math.min(i1+1,51), f=t.visualPos-i1; let p1=ludoPath[(i1+o)%52], p2=ludoPath[(i2+o)%52]; if((i1+o)%52===51) p2=ludoPath[0]; t.targetX=(p1[0]+(p2[0]-p1[0])*f)*CS+CS/2; t.targetY=(p1[1]+(p2[1]-p1[1])*f)*CS+CS/2; } 
-        else if(t.state==='home'){ let p=t.player==='Host'?redHomePath:yellowHomePath, i1=Math.floor(t.visualPos), i2=Math.min(i1+1,4), f=t.visualPos-i1; t.targetX=(p[i1][0]+(p[i2][0]-p[i1][0])*f)*CS+CS/2; t.targetY=(p[i1][1]+(p[i2][1]-p[i1][1])*f)*CS+CS/2; } 
+        else if(t.state==='path' || t.state==='home' || (t.state==='done' && t.visualPos < 56)){ 
+            let o = (t.player==='Host') ? 0 : 26;
+            let i1 = Math.floor(t.visualPos), i2 = Math.min(i1+1, 56), f = t.visualPos - i1;
+            
+            function getCoords(idx) {
+                if (idx <= 50) return ludoPath[(idx + o) % 52];
+                else if (idx <= 55) return (t.player==='Host' ? redHomePath : yellowHomePath)[idx - 51];
+                else return [7.5, 7.5];
+            }
+            
+            let p1 = getCoords(i1), p2 = getCoords(i2);
+            t.targetX = (p1[0] + (p2[0]-p1[0])*f)*CS + CS/2; 
+            t.targetY = (p1[1] + (p2[1]-p1[1])*f)*CS + CS/2; 
+        } 
         else if(t.state==='done'){ t.targetX=7.5*CS; t.targetY=7.5*CS; }
     });
 
@@ -439,6 +466,27 @@ let tttBoard = ['','','','','','','','',''], isMyTurnTTT = false;
 const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 function initTTT() { isMyTurnTTT = (myRole === 'Host'); const b = document.getElementById('tttBoard'); b.innerHTML = ''; for(let i=0;i<9;i++){ const c = document.createElement('div'); c.className='ttt-cell'; c.id=`tcell-${i}`; c.onclick=()=>requestTTT(i); b.appendChild(c); } if(activeGame==='ttt') document.getElementById('gameStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; }
 function requestTTT(i) { if(!isMyTurnTTT || tttBoard[i]!=='') return; if(myRole === 'Guest') connection.send({ type: 'requestTTTMove', index: i }); else executeTTTMove(i, 'X'); }
-function executeTTTMove(i, sym) { tttBoard[i] = sym; let next = sym === 'X' ? 'Guest' : 'Host'; connection.send({ type: 'tttSync', board: tttBoard, turn: next }); isMyTurnTTT = (myRole === next); updateTTTLocal(); }
-function updateTTTLocal() { for(let i=0;i<9;i++) { const c = document.getElementById(`tcell-${i}`); c.innerText = tttBoard[i]; c.style.color = tttBoard[i] === 'X' ? 'var(--host-color)' : 'var(--guest-color)'; } if(!checkTTTWin() && activeGame==='ttt') document.getElementById('gameStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; }
-function checkTTTWin() { for(let w of winCombos) { if(tttBoard[w[0]] && tttBoard[w[0]]===tttBoard[w[1]] && tttBoard[w[0]]===tttBoard[w[2]]) { if(activeGame==='ttt') document.getElementById('gameStatus').innerText = (tttBoard[w[0]]==='X' && myRole==='Host') || (tttBoard[w[0]]==='O' && myRole==='Guest') ? "🏆 You Win!" : `🏆 ${friendName} Wins!`; isMyTurnTTT=false; return true; } } if(!tttBoard.includes('')) { if(activeGame==='ttt') document.getElementById('gameStatus').innerText="Draw!"; isMyTurnTTT=false; return true; } return false; }
+function executeTTTMove(i, sym) { 
+    tttBoard[i] = sym; let next = sym === 'X' ? 'Guest' : 'Host'; connection.send({ type: 'tttSync', board: tttBoard, turn: next }); 
+    isMyTurnTTT = (myRole === next); updateTTTLocal(); 
+}
+function updateTTTLocal() { 
+    for(let i=0;i<9;i++) { 
+        const c = document.getElementById(`tcell-${i}`); 
+        c.innerText = tttBoard[i]; 
+        if(tttBoard[i] === 'X') { c.classList.add('x-mark'); c.classList.remove('o-mark'); }
+        else if(tttBoard[i] === 'O') { c.classList.add('o-mark'); c.classList.remove('x-mark'); }
+        else { c.classList.remove('x-mark', 'o-mark'); }
+    } 
+    if(!checkTTTWin() && activeGame==='ttt') document.getElementById('gameStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; 
+}
+function checkTTTWin() { 
+    for(let w of winCombos) { 
+        if(tttBoard[w[0]] && tttBoard[w[0]]===tttBoard[w[1]] && tttBoard[w[0]]===tttBoard[w[2]]) { 
+            if(activeGame==='ttt') document.getElementById('gameStatus').innerText = (tttBoard[w[0]]==='X' && myRole==='Host') || (tttBoard[w[0]]==='O' && myRole==='Guest') ? "🏆 You Win!" : `🏆 ${friendName} Wins!`; 
+            isMyTurnTTT=false; return true; 
+        } 
+    } 
+    if(!tttBoard.includes('')) { if(activeGame==='ttt') document.getElementById('gameStatus').innerText="Draw!"; isMyTurnTTT=false; return true; } 
+    return false; 
+}
