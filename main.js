@@ -1,5 +1,5 @@
 // ==========================================
-// 1. STATE & NETWORKING (PeerJS Engine)
+// 1. STATE & NETWORKING
 // ==========================================
 let peer, connection, myRole = '', myName = 'Player 1', friendName = 'Player 2';
 let activeGame = 'ludo', isChatOpen = false, isMenuOpen = false, isRolling = false;
@@ -17,7 +17,6 @@ function setDiceFace(id, roll) {
     for(let i=0; i<9; i++) {
         let dot = document.createElement('div'); dot.style.width='100%'; dot.style.height='100%'; dot.style.borderRadius='50%';
         if(p[roll] && p[roll].includes(i)) { 
-            // Authentic 3D inset dots
             dot.style.background = 'radial-gradient(circle at 30% 30%, #555, #000)'; 
             dot.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.8)'; 
         } 
@@ -96,14 +95,14 @@ function setupListeners() {
         }
         if (data.type === 'chat') appendChat(friendName, data.msg, 'msg-them');
         
-        // Host processing validation
+        // Host enforces logic entirely
         if (myRole === 'Host') {
             if (data.type === 'requestRoll') hostGenerateRoll(data.game, 'Guest');
             if (data.type === 'requestLudoMove') { let t = ludoState.tokens['Guest'].find(x => x.id === data.tokenId); if (t) attemptLudoMove(t, ludoState.roll); }
             if (data.type === 'requestTTTMove') executeTTTMove(data.index, 'O');
         }
 
-        // Sync packets
+        // Guests react strictly to Syncs
         if (data.type === 'diceRollAnim') playDiceAnimation(data);
         if (data.type === 'tttSync') { tttBoard = data.board; isMyTurnTTT = data.turn === myRole; updateTTTLocal(); }
         if (data.type === 'initSnakesMap') { portals = data.portals; initSnakes(); }
@@ -168,7 +167,6 @@ function playDiceAnimation(data) {
             setDiceFace(`dice${data.role}`, data.result); 
             dice.classList.remove('rolling'); isRolling = false;
             
-            // Host is Authoritative
             if (myRole === 'Host') {
                 if (data.game === 'snakes') processSnakesRoll(data.result, data.role); 
                 if (data.game === 'ludo') processLudoRoll(data.result, data.role);
@@ -178,7 +176,7 @@ function playDiceAnimation(data) {
 }
 
 // ==========================================
-// 3. SNAKES & LADDERS: HIGH CONTRAST COLORS
+// 3. SNAKES & LADDERS: FLAWLESS ENGINE
 // ==========================================
 let sllPlayers = { 'Host': { pos: 0, class: 'Host' }, 'Guest': { pos: 0, class: 'Guest' } }, sllTurn = 'Host', portals = {}; 
 function generateRandomPortals() { let p={}; let u = new Set([1, 100]); for(let i=0;i<6;i++){ let s=getRandFree(u,2,80); let e=getRandFree(u,s+10,99); p[s]=e; u.add(s); u.add(e); } for(let i=0;i<6;i++){ let s=getRandFree(u,20,99); let e=getRandFree(u,2,s-10); p[s]=e; u.add(s); u.add(e); } return p; }
@@ -269,13 +267,22 @@ function processSnakesRoll(roll, role) {
 function handleSnakesSync(data) { 
     sllPlayers=data.players; sllTurn=data.nextTurn; if(activeGame==='snakes') document.getElementById('gameStatus').innerText=`${data.msg}`; 
     const {player,intPos,finPos} = data.animData; moveTokenDOM(player,intPos); 
-    document.getElementById('diceHost').style.pointerEvents='none'; document.getElementById('diceGuest').style.pointerEvents='none'; 
+    
+    // FIX: Disable during animation
+    document.getElementById('diceHost').style.pointerEvents='none'; 
+    document.getElementById('diceGuest').style.pointerEvents='none'; 
+    
     if(intPos!==finPos){ setTimeout(()=>{ moveTokenDOM(player,finPos); setTimeout(updateDiceTurnUI,600); }, 600); } else setTimeout(updateDiceTurnUI,600); 
 }
 
 function updateDiceTurnUI() { 
     if(activeGame !== 'snakes') return;
     const zh=document.getElementById('zoneHost'), zg=document.getElementById('zoneGuest');
+    
+    // FIX: Always re-enable pointer events after animation finishes
+    document.getElementById('diceHost').style.pointerEvents='auto'; 
+    document.getElementById('diceGuest').style.pointerEvents='auto'; 
+    
     if(sllTurn==='Host') { zh.classList.add('active-turn'); zg.classList.remove('active-turn'); if(!document.getElementById('gameStatus').innerText.includes("again")) document.getElementById('gameStatus').innerText=myRole==='Host'?"Your Turn!":`${friendName}'s Turn`; }
     else if(sllTurn==='Guest') { zg.classList.add('active-turn'); zh.classList.remove('active-turn'); if(!document.getElementById('gameStatus').innerText.includes("again")) document.getElementById('gameStatus').innerText=myRole==='Guest'?"Your Turn!":`${friendName}'s Turn`; }
     else { zh.classList.remove('active-turn'); zg.classList.remove('active-turn'); }
@@ -292,7 +299,7 @@ const safeZones = [0, 8, 13, 21, 26, 34, 39, 47];
 const redHomePath = [[7,13],[7,12],[7,11],[7,10],[7,9]]; const yellowHomePath = [[7,1],[7,2],[7,3],[7,4],[7,5]];
 
 let ludoState = getInitialLudoState();
-function getInitialLudoState() { return { turn: 'Host', roll: 0, hasRolled: false, tokens: { 'Host': [ { id: 'H1', state: 'base', pos: 0, player: 'Host', bx: 2.5*CS, by: 11.5*CS, x: 2.5*CS, y: 11.5*CS, targetX: 2.5*CS, targetY: 11.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H2', state: 'base', pos: 0, player: 'Host', bx: 3.5*CS, by: 11.5*CS, x: 3.5*CS, y: 11.5*CS, targetX: 3.5*CS, targetY: 11.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H3', state: 'base', pos: 0, player: 'Host', bx: 2.5*CS, by: 12.5*CS, x: 2.5*CS, y: 12.5*CS, targetX: 2.5*CS, targetY: 12.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H4', state: 'base', pos: 0, player: 'Host', bx: 3.5*CS, by: 12.5*CS, x: 3.5*CS, y: 12.5*CS, targetX: 3.5*CS, targetY: 12.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ], 'Guest': [ { id: 'G1', state: 'base', pos: 0, player: 'Guest', bx: 11.5*CS, by: 2.5*CS, x: 11.5*CS, y: 2.5*CS, targetX: 11.5*CS, targetY: 2.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G2', state: 'base', pos: 0, player: 'Guest', bx: 12.5*CS, by: 2.5*CS, x: 12.5*CS, y: 2.5*CS, targetX: 12.5*CS, targetY: 2.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G3', state: 'base', pos: 0, player: 'Guest', bx: 11.5*CS, by: 3.5*CS, x: 11.5*CS, y: 3.5*CS, targetX: 11.5*CS, targetY: 3.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G4', state: 'base', pos: 0, player: 'Guest', bx: 12.5*CS, by: 3.5*CS, x: 12.5*CS, y: 3.5*CS, targetX: 12.5*CS, targetY: 3.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ] } }; }
+function getInitialLudoState() { return { turn: 'Host', roll: 0, hasRolled: false, msg: null, tokens: { 'Host': [ { id: 'H1', state: 'base', pos: 0, player: 'Host', bx: 2.5*CS, by: 11.5*CS, x: 2.5*CS, y: 11.5*CS, targetX: 2.5*CS, targetY: 11.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H2', state: 'base', pos: 0, player: 'Host', bx: 3.5*CS, by: 11.5*CS, x: 3.5*CS, y: 11.5*CS, targetX: 3.5*CS, targetY: 11.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H3', state: 'base', pos: 0, player: 'Host', bx: 2.5*CS, by: 12.5*CS, x: 2.5*CS, y: 12.5*CS, targetX: 2.5*CS, targetY: 12.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'H4', state: 'base', pos: 0, player: 'Host', bx: 3.5*CS, by: 12.5*CS, x: 3.5*CS, y: 12.5*CS, targetX: 3.5*CS, targetY: 12.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ], 'Guest': [ { id: 'G1', state: 'base', pos: 0, player: 'Guest', bx: 11.5*CS, by: 2.5*CS, x: 11.5*CS, y: 2.5*CS, targetX: 11.5*CS, targetY: 2.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G2', state: 'base', pos: 0, player: 'Guest', bx: 12.5*CS, by: 2.5*CS, x: 12.5*CS, y: 2.5*CS, targetX: 12.5*CS, targetY: 2.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G3', state: 'base', pos: 0, player: 'Guest', bx: 11.5*CS, by: 3.5*CS, x: 11.5*CS, y: 3.5*CS, targetX: 11.5*CS, targetY: 3.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 }, { id: 'G4', state: 'base', pos: 0, player: 'Guest', bx: 12.5*CS, by: 3.5*CS, x: 12.5*CS, y: 3.5*CS, targetX: 12.5*CS, targetY: 3.5*CS, z: 0, visualPos: 0, isFlyingBack: false, flyDist: 0 } ] } }; }
 
 function getGlobalPos(role, pos) { return role === 'Host' ? pos : (pos + 26) % 52; }
 function opponentTokensAt(gPos, oppRole) { return ludoState.tokens[oppRole].filter(t => (t.state === 'path' || t.state === 'home') && t.pos <= 50 && getGlobalPos(oppRole, t.pos) === gPos).length; }
@@ -334,22 +341,26 @@ function processLudoRoll(roll, role) {
     if (roll === 6) lConsec6s++; else lConsec6s = 0;
     if (lConsec6s === 3) {
         lConsec6s = 0; ludoState.hasRolled = false; ludoState.turn = role === 'Host' ? 'Guest' : 'Host';
-        appendChat('System', `🚫 FOUL! 3 Sixes in a row. Turn skipped.`);
+        ludoState.msg = `🚫 FOUL! 3 Sixes in a row. Turn skipped.`;
         connection.send({type: 'ludoSync', state: ludoState}); updateLudoUI(); return;
     }
 
     let validTokens = getValidTokens(role, roll);
 
     if (validTokens.length === 0) { 
-        if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`No valid moves.`; 
+        ludoState.msg = `Rolled ${roll}, no valid moves.`;
+        connection.send({type: 'ludoSync', state: ludoState});
+        if(activeGame==='ludo') document.getElementById('gameStatus').innerText = ludoState.msg; 
+        
         setTimeout(() => endLudoTurn(role, false), 1200); 
     } else { 
-        if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Choose a token to move!`; 
+        ludoState.msg = `Choose a token to move!`;
         connection.send({type: 'ludoSync', state: ludoState}); 
+        if(activeGame==='ludo') document.getElementById('gameStatus').innerText = ludoState.msg;
         
-        // AUTO-MOVE ENGINE: Host processes logic for both players if only 1 option exists
+        // FIX: Host auto-moves for both players if only 1 option
         if (validTokens.length === 1) {
-            setTimeout(() => attemptLudoMove(validTokens[0], roll), 400);
+            setTimeout(() => attemptLudoMove(validTokens[0], roll), 500);
         }
     }
 }
@@ -363,7 +374,7 @@ function attachLudoEvents() {
         const scaleX = logicalSize / rect.width;
         const scaleY = logicalSize / rect.height;
         
-        // BUG FIX: Precise Mobile Hitbox Calculation
+        // FIX: Flawless absolute touch coordinates parsing
         let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
         let cx = (clientX - rect.left) * scaleX;
@@ -374,7 +385,10 @@ function attachLudoEvents() {
         for (let t of ludoState.tokens[myRole]) {
             if (Math.sqrt((cx - t.targetX)**2 + (cy - t.targetY)**2) <= 45) {
                 if (!validTokens.find(vt => vt.id === t.id)) continue; 
-                if(myRole==='Guest') connection.send({type:'requestLudoMove', tokenId:t.id}); 
+                if(myRole==='Guest') {
+                    connection.send({type:'requestLudoMove', tokenId:t.id}); 
+                    ludoState.hasRolled = false; // Prevent double tap sync issues
+                }
                 else attemptLudoMove(t, ludoState.roll); 
                 return; 
             }
@@ -425,16 +439,21 @@ function endLudoTurn(role, cap = false) {
     
     let bonus = (roll === 6 || cap);
     ludoState.hasRolled = false; 
+    ludoState.msg = null; // Clear messaging for clean UI flow
     
-    if(bonus) { ludoState.turn = role; if(activeGame==='ludo') document.getElementById('gameStatus').innerText=`Bonus Turn!`; } 
+    if(bonus) { ludoState.turn = role; if(activeGame==='ludo') ludoState.msg = `Bonus Turn!`; } 
     else { ludoState.turn = role === 'Host' ? 'Guest' : 'Host'; lConsec6s = 0; }
     
     updateLudoUI(); connection.send({type:'ludoSync',state:ludoState});
 }
 
 function handleLudoSync(data) { 
-    let old=ludoState; ludoState=data.state; ['Host','Guest'].forEach(k=>{ ludoState.tokens[k].forEach((t,i)=>{ t.x=old.tokens[k][i].x; t.y=old.tokens[k][i].y; t.z=old.tokens[k][i].z; t.isFlyingBack=old.tokens[k][i].isFlyingBack; t.flyDist=old.tokens[k][i].flyDist; }); });
-    if(data.msg==="win" && activeGame==='ludo'){ document.getElementById('gameStatus').innerText=`🏆 GAME OVER 🏆`; } else updateLudoUI(); 
+    let old=ludoState; ludoState=data.state; 
+    ['Host','Guest'].forEach(k=>{ ludoState.tokens[k].forEach((t,i)=>{ t.x=old.tokens[k][i].x; t.y=old.tokens[k][i].y; t.z=old.tokens[k][i].z; t.isFlyingBack=old.tokens[k][i].isFlyingBack; t.flyDist=old.tokens[k][i].flyDist; }); });
+    
+    if (ludoState.msg && activeGame==='ludo') document.getElementById('gameStatus').innerText = ludoState.msg;
+    if(data.msg==="win" && activeGame==='ludo'){ document.getElementById('gameStatus').innerText=`🏆 GAME OVER 🏆`; } 
+    else updateLudoUI(); 
 }
 
 function updateLudoUI() {
@@ -443,10 +462,10 @@ function updateLudoUI() {
     
     if(ludoState.turn==='Host') { 
         zh.classList.add('active-turn'); zg.classList.remove('active-turn');
-        if(!ludoState.hasRolled) document.getElementById('gameStatus').innerText=myRole==='Host'?"Your Turn! Roll Dice.":"Opponent is thinking..."; 
+        if(!ludoState.hasRolled && (!ludoState.msg || ludoState.msg.includes("Bonus"))) document.getElementById('gameStatus').innerText=myRole==='Host'?"Your Turn! Roll Dice.":"Opponent is thinking..."; 
     } else { 
         zg.classList.add('active-turn'); zh.classList.remove('active-turn');
-        if(!ludoState.hasRolled) document.getElementById('gameStatus').innerText=myRole==='Guest'?"Your Turn! Roll Dice.":"Opponent is thinking..."; 
+        if(!ludoState.hasRolled && (!ludoState.msg || ludoState.msg.includes("Bonus"))) document.getElementById('gameStatus').innerText=myRole==='Guest'?"Your Turn! Roll Dice.":"Opponent is thinking..."; 
     }
 }
 
