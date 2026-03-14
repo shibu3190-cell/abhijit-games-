@@ -3,59 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Multiplayer Game Hub</title>
+    <title>P2P Game Hub | Material Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #1e1e2f; --panel: #2a2a40; --text: #fff; --accent: #ff4757; --accent2: #1e90ff; --chat-bg: #151521; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
-        h1 { margin-top: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
+        :root { 
+            --bg: #202124; 
+            --surface: #292a2d; 
+            --primary: #8ab4f8; 
+            --host-color: #f28b82; 
+            --guest-color: #8ab4f8;
+            --text: #e8eaed; 
+            --chat-bg: #171717; 
+        }
         
-        /* Main UI Panels */
-        .panel { background: var(--panel); padding: 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); text-align: center; width: 350px; max-width: 90vw; margin-bottom: 20px; }
-        .btn { padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; background-color: var(--accent2); color: white; margin: 5px; transition: 0.2s; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:disabled { background-color: #555; cursor: not-allowed; transform: none; }
-        .btn-host { background-color: var(--accent); }
-        input { padding: 12px; border: none; border-radius: 8px; width: 80%; margin-bottom: 10px; text-align: center; font-size: 16px; font-weight: bold; box-sizing: border-box; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; overflow-x: hidden; }
+        h1 { margin-top: 0; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
         
-        /* Game Sections & Navigation */
-        #gameNav { display: none; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .game-section { display: none; flex-direction: column; align-items: center; background: var(--panel); padding: 20px; border-radius: 15px; max-width: 100%; overflow-x: auto; }
-        .active-game { display: flex; }
-        .status-text { font-size: 20px; font-weight: bold; margin-bottom: 15px; text-align: center; color: #ffcc00; }
+        /* Material UI Panels */
+        .panel { background: var(--surface); padding: 30px; border-radius: 24px; box-shadow: 0 12px 24px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2); text-align: center; width: 350px; max-width: 90vw; margin-bottom: 20px; transition: 0.3s ease; }
+        
+        /* Material Buttons */
+        .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; font-family: 'Roboto', sans-serif; cursor: pointer; border: none; border-radius: 50px; background-color: var(--primary); color: #202124; margin: 5px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(138, 180, 248, 0.4); }
+        .btn:active { transform: translateY(0px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .btn:disabled { background-color: #5f6368; color: #9aa0a6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-host { background-color: var(--host-color); }
+        .btn-host:hover { box-shadow: 0 6px 12px rgba(242, 139, 130, 0.4); }
+        
+        /* Inputs */
+        input { padding: 14px; border: 2px solid #5f6368; border-radius: 12px; width: 80%; margin-bottom: 12px; text-align: center; font-size: 16px; font-weight: bold; box-sizing: border-box; background: #202124; color: white; transition: 0.2s; outline: none; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(138, 180, 248, 0.3); }
+        
+        /* Layouts */
+        #gameNav { display: none; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
+        .game-section { display: none; flex-direction: column; align-items: center; background: var(--surface); padding: 25px; border-radius: 24px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); max-width: 100%; overflow-x: auto; }
+        .active-game { display: flex; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .status-text { font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center; color: #fbbc05; min-height: 24px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 50px; }
 
-        /* Shared Animated 3D Dice */
-        .dice-container { margin-bottom: 15px; background: #1a1a2e; padding: 15px; border-radius: 10px; text-align: center; width: 100%; box-sizing: border-box; perspective: 500px; }
-        .dice { font-size: 60px; margin: 10px 0; display: inline-block; cursor: default; transform-style: preserve-3d; transition: transform 0.1s; text-shadow: 0px 4px 10px rgba(0,0,0,0.5); }
-        .rolling { animation: roll3D 0.5s infinite linear; }
-        @keyframes roll3D { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); } }
+        /* 3D Dice */
+        .dice-container { margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 20px; text-align: center; width: 100%; box-sizing: border-box; perspective: 800px; }
+        .dice { font-size: 70px; margin: 10px 0; display: inline-block; cursor: default; transform-style: preserve-3d; transition: transform 0.1s; text-shadow: 0px 10px 20px rgba(0,0,0,0.6); }
+        .rolling { animation: roll3D 0.6s infinite cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes roll3D { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); } 50% { transform: rotateX(180deg) rotateY(180deg) rotateZ(180deg) scale(1.2); } 100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg) scale(1); } }
 
         /* Tic Tac Toe Grid */
-        .ttt-board { display: grid; grid-template-columns: repeat(3, 90px); gap: 8px; margin-top: 10px; }
-        .ttt-cell { width: 90px; height: 90px; background: #3a3a52; display: flex; justify-content: center; align-items: center; font-size: 50px; font-weight: bold; cursor: pointer; border-radius: 12px; transition: background 0.2s; }
-        .ttt-cell:hover { background: #4a4a65; }
+        .ttt-board { display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; margin-top: 10px; }
+        .ttt-cell { width: 90px; height: 90px; background: #3c4043; display: flex; justify-content: center; align-items: center; font-size: 50px; font-weight: 900; cursor: pointer; border-radius: 16px; transition: 0.2s; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+        .ttt-cell:hover { background: #4a4d51; transform: scale(1.05); }
 
         /* Snakes & Ladders Grid */
-        .snakes-board { display: grid; grid-template-columns: repeat(10, 35px); grid-template-rows: repeat(10, 35px); border: 4px solid #fff; background-color: #f1c40f; position: relative; border-radius: 10px; }
-        .snakes-cell { border: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #333; position: relative; }
-        .snakes-cell:nth-child(even) { background-color: #f39c12; }
-        .portal-emoji { position: absolute; font-size: 18px; z-index: 1; opacity: 0.8; }
-        .token { width: 14px; height: 14px; border-radius: 50%; position: absolute; border: 2px solid white; z-index: 10; transition: all 0.5s ease-in-out; }
-        .token.Host { background: radial-gradient(circle, #ff6b81, #ff4757); margin-top: -7px; margin-left: -7px; }
-        .token.Guest { background: radial-gradient(circle, #70a1ff, #1e90ff); margin-top: 7px; margin-left: 7px; }
+        .snakes-board { display: grid; grid-template-columns: repeat(10, 35px); grid-template-rows: repeat(10, 35px); border: 6px solid #3c4043; background-color: #fbbc05; position: relative; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .snakes-cell { border: 1px solid rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: 900; color: #202124; position: relative; }
+        .snakes-cell:nth-child(even) { background-color: #f29900; }
+        .portal-emoji { position: absolute; font-size: 20px; z-index: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        
+        /* 3D DOM Tokens for Snakes & Ladders */
+        .token { width: 16px; height: 16px; border-radius: 50%; position: absolute; border: 2px solid white; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .token.Host { background: radial-gradient(circle at 30% 30%, #ff8a80, #d50000); margin-top: -8px; margin-left: -8px; }
+        .token.Guest { background: radial-gradient(circle at 30% 30%, #8c9eff, #2962ff); margin-top: 8px; margin-left: 8px; }
+        /* Hop animation class */
+        .token-hop { animation: hop 0.4s ease-in-out; }
+        @keyframes hop { 0% { transform: scale(1) translateY(0); box-shadow: 0 4px 6px rgba(0,0,0,0.5); } 50% { transform: scale(1.4) translateY(-15px); box-shadow: 0 15px 15px rgba(0,0,0,0.3); z-index: 20; } 100% { transform: scale(1) translateY(0); box-shadow: 0 4px 6px rgba(0,0,0,0.5); } }
 
         /* Ludo Canvas */
-        canvas { background: white; border-radius: 10px; cursor: pointer; max-width: 100%; height: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        canvas { background: #e8eaed; border-radius: 16px; cursor: pointer; max-width: 100%; height: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
 
-        /* Chat Box Styles */
-        #chatPanel { display: none; margin-top: 20px; width: 350px; max-width: 90vw; background: var(--panel); padding: 15px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .chat-messages { height: 150px; background: var(--chat-bg); border-radius: 8px; padding: 10px; overflow-y: auto; text-align: left; font-size: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .chat-input-row { display: flex; gap: 5px; }
-        .chat-input-row input { margin: 0; width: 100%; padding: 10px; font-size: 14px; }
-        .chat-input-row button { margin: 0; padding: 10px; font-size: 14px; }
-        .msg-system { color: #aaa; font-style: italic; text-align: center; font-size: 12px; }
-        .msg-me { color: #fff; }
-        .msg-them { color: #1e90ff; }
+        /* Chat Box */
+        #chatPanel { display: none; margin-top: 20px; width: 350px; max-width: 90vw; background: var(--surface); padding: 20px; border-radius: 24px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+        .chat-messages { height: 160px; background: var(--chat-bg); border-radius: 12px; padding: 12px; overflow-y: auto; text-align: left; font-size: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #3c4043; }
+        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input-row input { margin: 0; width: 100%; padding: 12px; font-size: 14px; border-radius: 50px; }
+        .chat-input-row button { margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 50px; }
+        .msg-system { color: #9aa0a6; font-style: italic; text-align: center; font-size: 12px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; }
+        .msg-me { color: #fff; background: rgba(138, 180, 248, 0.2); padding: 8px 12px; border-radius: 12px 12px 0 12px; align-self: flex-end; max-width: 80%; }
+        .msg-them { color: var(--primary); background: rgba(255, 255, 255, 0.1); padding: 8px 12px; border-radius: 12px 12px 12px 0; align-self: flex-start; max-width: 80%; }
     </style>
 </head>
 <body>
@@ -63,15 +87,13 @@
     <h1>🎮 P2P Game Hub</h1>
 
     <div class="panel" id="setupPanel">
-        <h2>Network Setup</h2>
+        <h2 style="margin-top:0;">Network Setup</h2>
         <input type="text" id="playerName" placeholder="Enter Your Name" autocomplete="off" maxlength="12">
-        <hr style="border: 1px solid #4a4a65; margin: 20px 0;">
-        
+        <hr style="border: 1px solid #3c4043; margin: 20px 0;">
         <button class="btn btn-host" onclick="hostGame()">Host Game</button>
-        <p id="myIdDisplay" style="color: #ffcc00; font-weight: bold; font-size: 18px; margin: 15px 0;"></p>
-        <hr style="border: 1px solid #4a4a65; margin: 20px 0;">
-        
-        <input type="text" id="joinId" placeholder="Friend's Game ID" autocomplete="off">
+        <p id="myIdDisplay" style="color: #34a853; font-weight: 900; font-size: 22px; margin: 15px 0; letter-spacing: 2px;"></p>
+        <hr style="border: 1px solid #3c4043; margin: 20px 0;">
+        <input type="text" id="joinId" placeholder="Friend's Game ID" autocomplete="off" style="text-transform: uppercase;">
         <br>
         <button class="btn" onclick="joinGame()">Join Game</button>
     </div>
@@ -79,7 +101,7 @@
     <div id="gameNav">
         <button class="btn" onclick="switchGame('ttt')">Tic-Tac-Toe</button>
         <button class="btn" onclick="switchGame('snakes')">Snakes & Ladders</button>
-        <button class="btn" onclick="switchGame('ludo')">Ludo Canvas</button>
+        <button class="btn" onclick="switchGame('ludo')">Ludo 3D</button>
     </div>
 
     <div id="ttt" class="game-section">
@@ -98,7 +120,7 @@
     </div>
 
     <div id="ludo" class="game-section">
-        <div class="status-text" id="ludoStatus">Ludo Engine: Capture tokens!</div>
+        <div class="status-text" id="ludoStatus">Ludo: Get 4 tokens home!</div>
         <div class="dice-container">
             <div class="dice" id="ludoDice">🎲</div>
             <button class="btn" id="ludoDiceBtn" onclick="rollUniversalDice('ludo')">Roll Dice</button>
@@ -109,14 +131,14 @@
     <div id="chatPanel">
         <div class="chat-messages" id="chatBox"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" onkeypress="handleChatKeyPress(event)">
+            <input type="text" id="chatInput" placeholder="Message..." autocomplete="off" onkeypress="handleChatKeyPress(event)">
             <button class="btn" onclick="sendChat()">Send</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 1. P2P NETWORKING (The "Green Test" Logic)
+        // 1. P2P NETWORKING (The Bulletproof Setup)
         // ==========================================
         let peer, connection, myRole = '';
         let myName = 'Player 1', friendName = 'Player 2';
@@ -126,16 +148,12 @@
         async function initPeer() {
             const nameInput = document.getElementById('playerName').value.trim();
             if(nameInput) myName = nameInput;
-
-            // Simple ID generation that worked perfectly
             const randomId = Math.random().toString(36).substr(2, 4).toUpperCase();
             
             return new Promise((resolve) => {
                 peer = new Peer(randomId, { debug: 3 });
-                
                 peer.on('open', id => resolve(id));
                 peer.on('error', err => {
-                    console.error("PeerJS Error:", err);
                     alert("Connection Error Type: [" + err.type + "]");
                     document.getElementById('myIdDisplay').innerText = "Connection Failed.";
                 });
@@ -143,10 +161,10 @@
         }
 
         async function hostGame() {
-            document.getElementById('myIdDisplay').innerText = "Generating ID...";
+            document.getElementById('myIdDisplay').innerText = "GENERATING...";
             const id = await initPeer();
             if(id) {
-                document.getElementById('myIdDisplay').innerText = `Your ID: ${id}`;
+                document.getElementById('myIdDisplay').innerText = id;
                 peer.on('connection', (conn) => { connection = conn; myRole = 'Host'; startGame(); });
             }
         }
@@ -165,12 +183,12 @@
             document.getElementById('chatPanel').style.display = 'block';
             
             connection.send({ type: 'init', name: myName });
-            appendChat('System', `You joined the game as ${myName}.`);
+            appendChat('System', `You joined as ${myName}.`);
 
             connection.on('data', (data) => {
                 if (data.type === 'init') {
                     friendName = data.name;
-                    appendChat('System', `${friendName} has connected!`);
+                    appendChat('System', `${friendName} connected!`);
                     updateAllUI();
                 }
                 if (data.type === 'chat') appendChat(friendName, data.msg, 'msg-them');
@@ -181,10 +199,9 @@
             });
 
             initTTT(); initSnakes(); initLudo();
-            switchGame('ludo'); // Switch to Ludo by default to show it off!
+            switchGame('ludo');
         }
 
-        // --- CHAT LOGIC ---
         function sendChat() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
@@ -210,6 +227,7 @@
                 document.getElementById('tttStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`;
             }
             updateLudoUI();
+            updateSnakesBoard();
         }
 
         function rollUniversalDice(gameType) {
@@ -226,7 +244,7 @@
                 isRolling = false;
                 if (gameType === 'snakes') processSnakesRoll(finalRoll);
                 if (gameType === 'ludo') processLudoRoll(finalRoll);
-            }, 500); // Wait 0.5s for 3D animation to finish
+            }, 600); 
         }
 
         // ==========================================
@@ -234,58 +252,20 @@
         // ==========================================
         let tttBoard = ['', '', '', '', '', '', '', '', ''], isMyTurnTTT = false, myTTTSymbol = '';
         const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        
-        function initTTT() { 
-            tttBoard = ['', '', '', '', '', '', '', '', ''];
-            myTTTSymbol = myRole === 'Host' ? 'X' : 'O'; 
-            isMyTurnTTT = (myRole === 'Host'); 
-            document.getElementById('tttReset').style.display = 'none';
-            const board = document.getElementById('tttBoard'); 
-            board.innerHTML = ''; 
-            for (let i = 0; i < 9; i++) { 
-                const cell = document.createElement('div'); 
-                cell.className = 'ttt-cell'; cell.id = `tcell-${i}`; cell.onclick = () => playTTT(i); 
-                board.appendChild(cell); 
-            } 
-            document.getElementById('tttStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; 
-        }
-        function playTTT(index) { 
-            if (!isMyTurnTTT || tttBoard[index] !== '') return; 
-            tttBoard[index] = myTTTSymbol; updateTTTUI(index, myTTTSymbol);
-            connection.send({ game: 'ttt', index: index, player: myTTTSymbol }); 
-            isMyTurnTTT = false; 
-            if(!checkTTTWin()) document.getElementById('tttStatus').innerText = `${friendName}'s Turn...`; 
-        }
-        function handleTTTMove(index, player) { 
-            tttBoard[index] = player; updateTTTUI(index, player);
-            isMyTurnTTT = true; 
-            if(!checkTTTWin()) document.getElementById('tttStatus').innerText = "Your Turn!"; 
-        }
-        function updateTTTUI(index, player) {
-            const cell = document.getElementById(`tcell-${index}`);
-            cell.innerText = player; cell.style.color = player === 'X' ? '#ff4757' : '#1e90ff';
-        }
-        function checkTTTWin() {
-            for(let w of winCombos) {
-                if(tttBoard[w[0]] && tttBoard[w[0]] === tttBoard[w[1]] && tttBoard[w[0]] === tttBoard[w[2]]) {
-                    document.getElementById('tttStatus').innerText = (tttBoard[w[0]] === myTTTSymbol) ? "You Win!" : `${friendName} Wins!`;
-                    isMyTurnTTT = false; document.getElementById('tttReset').style.display = 'inline-block'; return true;
-                }
-            }
-            if(!tttBoard.includes('')) { 
-                document.getElementById('tttStatus').innerText = "Draw!"; 
-                isMyTurnTTT = false; document.getElementById('tttReset').style.display = 'inline-block'; return true; 
-            }
-            return false;
-        }
+        function initTTT() { tttBoard = ['', '', '', '', '', '', '', '', '']; myTTTSymbol = myRole === 'Host' ? 'X' : 'O'; isMyTurnTTT = (myRole === 'Host'); document.getElementById('tttReset').style.display = 'none'; const board = document.getElementById('tttBoard'); board.innerHTML = ''; for (let i = 0; i < 9; i++) { const cell = document.createElement('div'); cell.className = 'ttt-cell'; cell.id = `tcell-${i}`; cell.onclick = () => playTTT(i); board.appendChild(cell); } document.getElementById('tttStatus').innerText = isMyTurnTTT ? "Your Turn!" : `${friendName}'s Turn...`; }
+        function playTTT(index) { if (!isMyTurnTTT || tttBoard[index] !== '') return; tttBoard[index] = myTTTSymbol; updateTTTUI(index, myTTTSymbol); connection.send({ game: 'ttt', index: index, player: myTTTSymbol }); isMyTurnTTT = false; if(!checkTTTWin()) document.getElementById('tttStatus').innerText = `${friendName}'s Turn...`; }
+        function handleTTTMove(index, player) { tttBoard[index] = player; updateTTTUI(index, player); isMyTurnTTT = true; if(!checkTTTWin()) document.getElementById('tttStatus').innerText = "Your Turn!"; }
+        function updateTTTUI(index, player) { const cell = document.getElementById(`tcell-${index}`); cell.innerText = player; cell.style.color = player === 'X' ? 'var(--host-color)' : 'var(--guest-color)'; }
+        function checkTTTWin() { for(let w of winCombos) { if(tttBoard[w[0]] && tttBoard[w[0]] === tttBoard[w[1]] && tttBoard[w[0]] === tttBoard[w[2]]) { document.getElementById('tttStatus').innerText = (tttBoard[w[0]] === myTTTSymbol) ? "🏆 You Win!" : `🏆 ${friendName} Wins!`; isMyTurnTTT = false; document.getElementById('tttReset').style.display = 'inline-block'; return true; } } if(!tttBoard.includes('')) { document.getElementById('tttStatus').innerText = "Draw!"; isMyTurnTTT = false; document.getElementById('tttReset').style.display = 'inline-block'; return true; } return false; }
         function resetTTT() { connection.send({ game: 'tttReset' }); initTTT(); }
 
         // ==========================================
-        // 3. SNAKES & LADDERS ENGINE
+        // 3. SNAKES & LADDERS (With 3D Token Hops)
         // ==========================================
         let sllPlayers = { 'Host': { pos: 1, class: 'Host' }, 'Guest': { pos: 1, class: 'Guest' } };
         let sllTurn = 'Host';
         const portals = { 16:6, 47:26, 49:11, 56:53, 62:19, 64:60, 87:24, 93:73, 95:75, 98:78, 4:14, 9:31, 21:42, 28:84, 51:67, 71:91, 80:100 };
+        
         function initSnakes() { 
             const board = document.getElementById('snakesBoard'); board.innerHTML = ''; let l2r = true; 
             for (let r = 10; r >= 1; r--) { 
@@ -297,48 +277,76 @@
                     if(portals[num] > num) cell.innerHTML += '<div class="portal-emoji">🪜</div>'; 
                     board.appendChild(cell); 
                 }); l2r = !l2r; 
-            } updateSnakesBoard(); 
+            } updateSnakesBoard(false); 
         }
+
         function processSnakesRoll(roll) { 
-            let p = sllPlayers[myRole]; if (p.pos + roll <= 100) p.pos += roll; if (portals[p.pos]) p.pos = portals[p.pos]; 
+            let p = sllPlayers[myRole]; 
+            if (p.pos + roll <= 100) p.pos += roll; 
+            
+            let statusMessage = `Rolled a ${roll}.`;
+
+            if (portals[p.pos]) { 
+                let newPos = portals[p.pos];
+                if (newPos > p.pos) statusMessage += ` 🪜 Climbed to ${newPos}!`;
+                else statusMessage += ` 🐍 Snake bite! Down to ${newPos}.`;
+                p.pos = newPos; 
+            } 
+            
             if (p.pos === 100) {
-                document.getElementById('snakesStatus').innerText = "🎉 YOU WIN! 🎉";
-                connection.send({ game: 'snakes', players: sllPlayers, roll: roll, nextTurn: 'none' }); updateSnakesBoard(); return;
+                document.getElementById('snakesStatus').innerText = "🏆 YOU WIN! 🏆";
+                connection.send({ game: 'snakes', players: sllPlayers, roll: roll, nextTurn: 'none', msg: "🏆 YOU WIN! 🏆" }); 
+                updateSnakesBoard(true); return;
             }
-            sllTurn = (myRole === 'Host') ? 'Guest' : 'Host'; 
-            connection.send({ game: 'snakes', players: sllPlayers, roll: roll, nextTurn: sllTurn }); 
-            document.getElementById('snakesStatus').innerText = `You rolled ${roll}!`; updateSnakesBoard(); 
+
+            if (roll === 6) statusMessage += " Roll again!";
+            else sllTurn = (myRole === 'Host') ? 'Guest' : 'Host'; 
+
+            document.getElementById('snakesStatus').innerText = statusMessage;
+            connection.send({ game: 'snakes', players: sllPlayers, roll: roll, nextTurn: sllTurn, msg: statusMessage }); 
+            updateSnakesBoard(true); 
         }
+
         function handleSnakesSync(data) { 
             sllPlayers = data.players; sllTurn = data.nextTurn; 
-            document.getElementById('snakesStatus').innerText = (sllTurn === 'none') ? `${friendName} rolled ${data.roll} and WINS!` : `${friendName} rolled ${data.roll}!`; 
-            document.getElementById('snakesDice').innerText = diceFaces[data.roll]; updateSnakesBoard(); 
+            document.getElementById('snakesStatus').innerText = `${friendName}: ${data.msg}`; 
+            document.getElementById('snakesDice').innerText = diceFaces[data.roll]; 
+            updateSnakesBoard(true); 
         }
-        function updateSnakesBoard() { 
+
+        function updateSnakesBoard(animate) { 
             document.querySelectorAll('.token').forEach(t => t.remove()); 
             Object.keys(sllPlayers).forEach(k => { 
                 const cell = document.getElementById(`scell-${sllPlayers[k].pos}`); 
-                if (cell) { const t = document.createElement('div'); t.className = `token ${sllPlayers[k].class}`; cell.appendChild(t); } 
+                if (cell) { 
+                    const t = document.createElement('div'); 
+                    t.className = `token ${sllPlayers[k].class}`; 
+                    if(animate) t.classList.add('token-hop'); // Adds the 3D jump effect
+                    cell.appendChild(t); 
+                } 
             }); 
+            
             const btn = document.getElementById('snakesDiceBtn'); 
-            if (sllTurn === myRole) { btn.style.display = 'inline-block'; btn.disabled = false; } else { btn.style.display = 'none'; } 
+            if (sllTurn === myRole) { 
+                btn.style.display = 'inline-block'; btn.disabled = false; 
+                if (!document.getElementById('snakesStatus').innerText.includes("again")) {
+                    document.getElementById('snakesStatus').innerText = "Your Turn!";
+                }
+            } else { btn.style.display = 'none'; } 
         }
 
         // ==========================================
-        // 4. THE BIG BOSS: ADVANCED LUDO ENGINE
+        // 4. LUDO 3D ENGINE (Full Logic & Shadows)
         // ==========================================
         let ludoCanvas = document.getElementById('ludoCanvas');
         let lctx = ludoCanvas.getContext('2d');
-        const CS = 30; // 450px / 15 grids
+        const CS = 30;
         
-        // 52-Step Main Path Coordinates (X, Y)
         const ludoPath = [
             [1,6],[2,6],[3,6],[4,6],[5,6], [6,5],[6,4],[6,3],[6,2],[6,1],[6,0], [7,0],[8,0], [8,1],[8,2],[8,3],[8,4],[8,5],
             [9,6],[10,6],[11,6],[12,6],[13,6],[14,6], [14,7],[14,8], [13,8],[12,8],[11,8],[10,8],[9,8], [8,9],[8,10],[8,11],[8,12],[8,13],[8,14],
             [7,14],[6,14], [6,13],[6,12],[6,11],[6,10],[6,9], [5,8],[4,8],[3,8],[2,8],[1,8],[0,8], [0,7],[0,6]
         ];
-        
-        // Safe zones (Stars + Start points) based on path indices
         const safeZones = [0, 8, 13, 21, 26, 34, 39, 47];
         const redHomePath = [[1,7], [2,7], [3,7], [4,7], [5,7]];
         const blueHomePath = [[13,7], [12,7], [11,7], [10,7], [9,7]];
@@ -361,17 +369,13 @@
             }
         };
 
-        // Initialize drawing coordinates to match base coordinates instantly
-        Object.values(ludoState.tokens).flat().forEach(t => { t.x = t.bx; t.y = t.by; t.targetX = t.bx; t.targetY = t.by; });
-
+        Object.values(ludoState.tokens).flat().forEach(t => { t.x = t.bx; t.y = t.by; t.targetX = t.bx; t.targetY = t.by; t.z = 0; });
         function initLudo() { updateTargetCoords(); requestAnimationFrame(renderLudoAnimation); updateLudoUI(); }
 
-        // Recalculates exactly where every token belongs on the board based on its data
         function updateTargetCoords() {
             Object.values(ludoState.tokens).flat().forEach(t => {
-                if (t.state === 'base') {
-                    t.targetX = t.bx; t.targetY = t.by;
-                } else if (t.state === 'path') {
+                if (t.state === 'base') { t.targetX = t.bx; t.targetY = t.by; } 
+                else if (t.state === 'path') {
                     let actualIndex = t.player === 'Host' ? t.pos : (t.pos + 26) % 52;
                     t.targetX = ludoPath[actualIndex][0] * CS + CS/2;
                     t.targetY = ludoPath[actualIndex][1] * CS + CS/2;
@@ -380,15 +384,15 @@
                     t.targetX = hPath[t.pos][0] * CS + CS/2;
                     t.targetY = hPath[t.pos][1] * CS + CS/2;
                 } else if (t.state === 'done') {
-                    t.targetX = 7.5 * CS; t.targetY = 7.5 * CS;
+                    // Center triangle finish line
+                    t.targetX = t.player === 'Host' ? 6.5 * CS : 8.5 * CS; 
+                    t.targetY = 7.5 * CS;
                 }
             });
         }
 
         function processLudoRoll(roll) {
             ludoState.roll = roll; ludoState.hasRolled = true;
-            
-            // Check if player has NO valid moves to skip turn automatically
             let hasValidMove = false;
             ludoState.tokens[myRole].forEach(t => {
                 if (t.state === 'base' && roll === 6) hasValidMove = true;
@@ -397,7 +401,7 @@
             });
 
             if (!hasValidMove) {
-                document.getElementById('ludoStatus').innerText = `Rolled ${roll}, but no valid moves!`;
+                document.getElementById('ludoStatus').innerText = `Rolled ${roll}, no valid moves!`;
                 setTimeout(endLudoTurn, 1500);
             } else {
                 document.getElementById('ludoStatus').innerText = `Rolled ${roll}! Click a valid token.`;
@@ -405,7 +409,6 @@
             }
         }
 
-        // Canvas Hit Detection
         ludoCanvas.onclick = (e) => {
             if (ludoState.turn !== myRole || !ludoState.hasRolled) return;
             const rect = ludoCanvas.getBoundingClientRect();
@@ -414,28 +417,31 @@
             const cy = (e.clientY - rect.top) * scale;
             
             for (let t of ludoState.tokens[myRole]) {
-                if (Math.sqrt((cx - t.x)**2 + (cy - t.y)**2) <= 15) {
-                    if (attemptLudoMove(t, ludoState.roll)) return; // Valid move executed
+                if (Math.sqrt((cx - t.x)**2 + (cy - t.y)**2) <= 18) {
+                    if (attemptLudoMove(t, ludoState.roll)) return; 
                 }
             }
         };
 
         function attemptLudoMove(t, roll) {
             if (t.state === 'base') {
-                if (roll !== 6) { alert("Need a 6 to leave the base!"); return false; }
+                if (roll !== 6) return false;
                 t.state = 'path'; t.pos = 0;
             } 
             else if (t.state === 'path') {
                 t.pos += roll;
-                if (t.pos > 50) { // Enters the home colored path
+                if (t.pos > 50) { 
                     t.state = 'home';
-                    t.pos = (t.pos - 50) - 1; // 0-indexed home path
+                    t.pos = (t.pos - 50) - 1; 
                 }
             } 
             else if (t.state === 'home') {
-                if (t.pos + roll > 5) { alert("Roll too high to enter home!"); return false; }
+                if (t.pos + roll > 5) return false; 
                 t.pos += roll;
-                if (t.pos === 5) t.state = 'done';
+                if (t.pos === 5) {
+                    t.state = 'done';
+                    appendChat('System', `🌟 ${myName} got a token HOME!`);
+                }
             } else { return false; }
 
             checkCaptures(t);
@@ -443,7 +449,6 @@
             return true;
         }
 
-        // COLLISION & CAPTURE LOGIC
         function checkCaptures(myToken) {
             if (myToken.state !== 'path') return;
             let myActualPos = (myToken.player === 'Host') ? myToken.pos : (myToken.pos + 26) % 52;
@@ -454,19 +459,36 @@
                     if (enemy.state === 'path') {
                         let enemyActualPos = (enemy.player === 'Host') ? enemy.pos : (enemy.pos + 26) % 52;
                         if (myActualPos === enemyActualPos) {
-                            enemy.state = 'base'; // Captured!
-                            enemy.pos = 0;
+                            enemy.state = 'base'; enemy.pos = 0;
                             appendChat('System', `⚔️ ${myName} captured a token!`);
+                            // Rule: Capture grants extra roll
+                            ludoState.roll = 6; 
                         }
                     }
                 });
             }
         }
 
+        function checkLudoWin() {
+            let win = true;
+            ludoState.tokens[myRole].forEach(t => { if(t.state !== 'done') win = false; });
+            if(win) {
+                ludoState.turn = 'none';
+                document.getElementById('ludoStatus').innerText = "🏆 YOU WIN LUDO! 🏆";
+                connection.send({ game: 'ludoSync', state: ludoState, msg: "win" });
+                return true;
+            }
+            return false;
+        }
+
         function endLudoTurn() {
+            if(checkLudoWin()) return;
             ludoState.hasRolled = false;
             updateTargetCoords();
+            
             if (ludoState.roll !== 6) ludoState.turn = myRole === 'Host' ? 'Guest' : 'Host';
+            else appendChat('System', `🎲 ${myName} rolled a 6 (or captured)! Roll again!`);
+            
             updateLudoUI();
             connection.send({ game: 'ludoSync', state: ludoState });
         }
@@ -474,15 +496,17 @@
         function handleLudoSync(data) { 
             ludoState = data.state; 
             updateTargetCoords(); 
-            updateLudoUI(); 
+            if(data.msg === "win") document.getElementById('ludoStatus').innerText = `🏆 ${friendName} WINS LUDO! 🏆`;
+            else updateLudoUI(); 
         }
 
         function updateLudoUI() {
-            if(document.getElementById('ludo').classList.contains('active-game')) {
+            if(document.getElementById('ludo').classList.contains('active-game') && ludoState.turn !== 'none') {
                 const isMe = ludoState.turn === myRole;
                 const btn = document.getElementById('ludoDiceBtn');
                 if (isMe && !ludoState.hasRolled) {
-                    document.getElementById('ludoStatus').innerText = "Your Turn! Roll the dice.";
+                    if (ludoState.roll === 6) document.getElementById('ludoStatus').innerText = "You rolled a 6! Roll again.";
+                    else document.getElementById('ludoStatus').innerText = "Your Turn! Roll the dice.";
                     btn.style.display = 'inline-block'; btn.disabled = false;
                 } else if (!isMe) {
                     document.getElementById('ludoStatus').innerText = `${friendName}'s Turn...`;
@@ -491,54 +515,66 @@
             }
         }
 
-        // SMOOTH ANIMATION RENDER LOOP
+        // --- THE 3D CANVAS RENDERER ---
         function renderLudoAnimation() {
-            // Lerp (Smooth Glide) x and y towards target
+            // Calculate 3D Hop Logic
             Object.values(ludoState.tokens).flat().forEach(t => {
-                t.x += (t.targetX - t.x) * 0.15; 
-                t.y += (t.targetY - t.y) * 0.15;
+                let dx = t.targetX - t.x;
+                let dy = t.targetY - t.y;
+                t.x += dx * 0.15; 
+                t.y += dy * 0.15;
+                
+                // If moving fast enough, simulate Z-axis height (hop)
+                let dist = Math.abs(dx) + Math.abs(dy);
+                if(dist > 2) t.z = Math.min(dist * 0.5, 12); 
+                else t.z = 0;
             });
 
-            // Draw Background and Paths
+            // Draw Board Setup
             lctx.clearRect(0,0,450,450);
-            lctx.fillStyle = "#ff4757"; lctx.fillRect(0,0,6*CS,6*CS); // Red Base
-            lctx.fillStyle = "#1e90ff"; lctx.fillRect(9*CS,9*CS,6*CS,6*CS); // Blue Base
-            lctx.fillStyle = "#fff"; lctx.fillRect(CS,CS,4*CS,4*CS); lctx.fillRect(10*CS,10*CS,4*CS,4*CS); // Base Inners
+            lctx.fillStyle = "#ea4335"; lctx.fillRect(0,0,6*CS,6*CS); // Red
+            lctx.fillStyle = "#4285f4"; lctx.fillRect(9*CS,9*CS,6*CS,6*CS); // Blue
+            lctx.fillStyle = "#fff"; lctx.fillRect(CS,CS,4*CS,4*CS); lctx.fillRect(10*CS,10*CS,4*CS,4*CS); 
             
-            // Draw Main White Path Cells
-            lctx.strokeStyle = "#ccc"; lctx.lineWidth = 1;
+            lctx.strokeStyle = "#bdc1c6"; lctx.lineWidth = 1;
             ludoPath.forEach((coords, i) => {
-                lctx.fillStyle = safeZones.includes(i) ? "#e8e8e8" : "#fff"; // Light grey for safe zones
+                lctx.fillStyle = safeZones.includes(i) ? "#f1f3f4" : "#fff"; 
                 lctx.fillRect(coords[0]*CS, coords[1]*CS, CS, CS);
                 lctx.strokeRect(coords[0]*CS, coords[1]*CS, CS, CS);
-                // Draw Stars on Safe Zones
                 if (safeZones.includes(i) && i !== 0 && i !== 26) {
-                    lctx.fillStyle = "#ffcc00"; lctx.font = "16px Arial"; lctx.fillText("★", coords[0]*CS + 7, coords[1]*CS + 22);
+                    lctx.fillStyle = "#fbbc05"; lctx.font = "bold 18px Arial"; lctx.fillText("★", coords[0]*CS + 6, coords[1]*CS + 22);
                 }
             });
             
-            // Draw Colored Home Paths
-            redHomePath.forEach(coords => {
-                lctx.fillStyle = "rgba(255, 71, 87, 0.4)"; lctx.fillRect(coords[0]*CS, coords[1]*CS, CS, CS);
-                lctx.strokeRect(coords[0]*CS, coords[1]*CS, CS, CS);
-            });
-            blueHomePath.forEach(coords => {
-                lctx.fillStyle = "rgba(30, 144, 255, 0.4)"; lctx.fillRect(coords[0]*CS, coords[1]*CS, CS, CS);
-                lctx.strokeRect(coords[0]*CS, coords[1]*CS, CS, CS);
-            });
+            redHomePath.forEach(coords => { lctx.fillStyle = "rgba(234, 67, 53, 0.3)"; lctx.fillRect(coords[0]*CS, coords[1]*CS, CS, CS); lctx.strokeRect(coords[0]*CS, coords[1]*CS, CS, CS); });
+            blueHomePath.forEach(coords => { lctx.fillStyle = "rgba(66, 133, 244, 0.3)"; lctx.fillRect(coords[0]*CS, coords[1]*CS, CS, CS); lctx.strokeRect(coords[0]*CS, coords[1]*CS, CS, CS); });
 
-            // Color Start Squares specifically
-            lctx.fillStyle = "rgba(255, 71, 87, 0.6)"; lctx.fillRect(1*CS, 6*CS, CS, CS);
-            lctx.fillStyle = "rgba(30, 144, 255, 0.6)"; lctx.fillRect(13*CS, 8*CS, CS, CS);
+            lctx.fillStyle = "rgba(234, 67, 53, 0.7)"; lctx.fillRect(1*CS, 6*CS, CS, CS);
+            lctx.fillStyle = "rgba(66, 133, 244, 0.7)"; lctx.fillRect(13*CS, 8*CS, CS, CS);
+            
+            // Draw Center Finish
+            lctx.fillStyle = "#34a853"; lctx.beginPath(); lctx.moveTo(6*CS, 6*CS); lctx.lineTo(9*CS, 6*CS); lctx.lineTo(7.5*CS, 7.5*CS); lctx.fill();
+            lctx.fillStyle = "#fbbc05"; lctx.beginPath(); lctx.moveTo(6*CS, 9*CS); lctx.lineTo(9*CS, 9*CS); lctx.lineTo(7.5*CS, 7.5*CS); lctx.fill();
+            lctx.fillStyle = "#ea4335"; lctx.beginPath(); lctx.moveTo(6*CS, 6*CS); lctx.lineTo(6*CS, 9*CS); lctx.lineTo(7.5*CS, 7.5*CS); lctx.fill();
+            lctx.fillStyle = "#4285f4"; lctx.beginPath(); lctx.moveTo(9*CS, 6*CS); lctx.lineTo(9*CS, 9*CS); lctx.lineTo(7.5*CS, 7.5*CS); lctx.fill();
 
-            // Draw Tokens (Using x and y which animate every frame)
+            // Draw 3D Tokens (Shadows first, then pieces)
             Object.values(ludoState.tokens).flat().forEach(t => {
-                lctx.beginPath(); lctx.arc(t.x, t.y, 10, 0, Math.PI*2);
-                lctx.fillStyle = t.player === 'Host' ? "#ff4757" : "#1e90ff";
-                lctx.fill(); lctx.strokeStyle = "#fff"; lctx.lineWidth = 2; lctx.stroke();
+                // Drop shadow based on Z height
+                lctx.beginPath(); lctx.arc(t.x, t.y + (t.z > 0 ? 6 : 2), 10, 0, Math.PI*2);
+                lctx.fillStyle = `rgba(0,0,0,${t.z > 0 ? 0.2 : 0.4})`; lctx.fill();
+                
+                // Actual 3D looking token piece (shifted up by t.z)
+                lctx.beginPath(); lctx.arc(t.x, t.y - t.z, 10, 0, Math.PI*2);
+                let grad = lctx.createRadialGradient(t.x - 3, t.y - t.z - 3, 2, t.x, t.y - t.z, 10);
+                grad.addColorStop(0, t.player === 'Host' ? '#ff8a80' : '#8c9eff');
+                grad.addColorStop(1, t.player === 'Host' ? '#d50000' : '#2962ff');
+                lctx.fillStyle = grad;
+                lctx.fill();
+                lctx.strokeStyle = "#fff"; lctx.lineWidth = 1.5; lctx.stroke();
             });
 
-            requestAnimationFrame(renderLudoAnimation); // Loop endlessly
+            requestAnimationFrame(renderLudoAnimation); 
         }
     </script>
 </body>
