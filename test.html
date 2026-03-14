@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+</head>
+<body style="font-family: sans-serif; padding: 50px; text-align: center;">
+    <h1>PeerJS Network Test</h1>
+    <button onclick="runTest()" style="padding: 15px 30px; font-size: 20px;">Test Connection</button>
+    <h2 id="output" style="color: #ff4757; margin-top: 30px;">Waiting...</h2>
+
+    <script>
+        function runTest() {
+            document.getElementById('output').innerText = "Attempting to connect to server...";
+            document.getElementById('output').style.color = "orange";
+            
+            try {
+                // The absolute most basic connection possible
+                const peer = new Peer({ debug: 3 });
+                
+                peer.on('open', (id) => {
+                    document.getElementById('output').innerText = "SUCCESS! Your network allows P2P. ID: " + id;
+                    document.getElementById('output').style.color = "green";
+                });
+
+                peer.on('error', (err) => {
+                    document.getElementById('output').innerText = "SERVER REJECTED: " + err.type;
+                    document.getElementById('output').style.color = "red";
+                });
+            } catch (e) {
+                document.getElementById('output').innerText = "BROWSER CRASH: " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
